@@ -9,4 +9,4 @@
 | Leslie Raya         |                 |                 |
 
 ## Milestones 
-- [Milestone 1: Game Decision & Wireframes](Milestones/Milestone1.md)
+- [Milestone 1: Game Decision & Wireframes](Milestones/Milestone1)
