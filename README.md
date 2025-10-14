@@ -5,7 +5,7 @@
 |-------------------- | ----------------|-----------------|
 | Griscelda Diaz-Rico | gdiaz8@sfsu.edu | Griscelda00     |
 | Chrissa Lavapie     |                 |                 |
-| Diego Sunderland    |                 |                 |
+| Diego Sunderland    | dsunderland@sfsu.edu               |  diegosun2               |
 | Leslie Raya         |                 |                 |
 
 ## Milestones 
