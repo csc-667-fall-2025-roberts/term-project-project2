@@ -10,3 +10,4 @@
 
 ## Milestones 
 - [Milestone 1: Game Decision & Wireframes](Milestones/Milestone1)
+- [Milestone 2: DB Schema](Milestones/Milestone2)
