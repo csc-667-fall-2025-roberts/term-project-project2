@@ -1,13 +1,13 @@
 import bcrypt from "bcrypt";
-import type { SecureUser, User } from "../../types/types.d";
+import type { SecureUser, User } from "../../../types/types";
 import db from "../connection";
-import { LOGIN, SIGNUP } from "./sql";
+import { LOGIN, SIGNUP, UPDATE_DISPLAY_NAME } from "./sql";
 
 const signup = async (username: string, email: string, clearTextPassword: string) => {
   const password = await bcrypt.hash(clearTextPassword, 10);
 
   try {
-    return await db.one<User>(SIGNUP, [username, email, password]);
+    return await db.one<User>(SIGNUP, [username, email, password, null]);
   } catch (e: any) {
     throw "Email or username invalid";
   }
@@ -18,9 +18,9 @@ const login = async (username: string, clearTextPassword: string) => {
     const secureUser = await db.one<SecureUser>(LOGIN, [username]);
 
     if (await bcrypt.compare(clearTextPassword, secureUser.password)) {
-      const { id, username, email, created_at } = secureUser;
+      const { id, username, email, display_name, created_at } = secureUser;
 
-      return { id, username, email, created_at } as User;
+      return { id, username, email, display_name, created_at } as User;
     } else {
       throw "Invalid login information";
     }
@@ -29,4 +29,12 @@ const login = async (username: string, clearTextPassword: string) => {
   }
 };
 
-export { login, signup };
+const updateDisplayName = async (userId: number, displayName: string) => {
+  try {
+    await db.none(UPDATE_DISPLAY_NAME, [displayName, userId]);
+  } catch (e: any) {
+    throw "Failed to update display name";
+  }
+};
+
+export { login, signup, updateDisplayName };

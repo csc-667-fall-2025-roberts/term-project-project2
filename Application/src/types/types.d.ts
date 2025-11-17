@@ -2,6 +2,7 @@ export interface User {
   id: number;
   username: string;
   email: string;
+  display_name?: string;
   created_at: Date;
 }
 
@@ -34,10 +35,4 @@ export type Game = {
   state: GameState;
   max_players: number;
   created_at: Date;
-};
-
-export type GamePlayer = {
-  id: number;
-  game_id: number;
-  user_id: number;
 };

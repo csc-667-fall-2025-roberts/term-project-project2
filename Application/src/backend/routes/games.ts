@@ -1,18 +1,20 @@
 import express from "express";
 import { Server } from "socket.io";
-import { GAME_CREATE } from "../../shared/keys";
+import { GAME_CREATE,GAME_LISTING } from "../../shared/keys";
 import { Games } from "../db";
 import logger from "../lib/logger";
 
 const router = express.Router();
 
-// POST create a game
-// POST join a game
-
 router.get("/", async (request, response) => {
-  const games = await Games.list();
+  const sessionId = request.session.id;
 
-  response.json({ games });
+  response.status(202).send();
+
+  const games = await Games.list();
+  const io = request.app.get("io") as Server;
+
+  io.to(sessionId).emit(GAME_LISTING, games);
 });
 
 router.post("/", async (request, response) => {
@@ -20,25 +22,26 @@ router.post("/", async (request, response) => {
     const { id } = request.session.user!;
     const { name, max_players } = request.body;
 
-    const game = await Games.create(id, name, max_players);
-    logger.info(
-      `User ${id} created game ${game.id} (name: ${game.name}, max_players: ${game.max_players})`,
-    );
+    const maxPlayers = max_players ? parseInt(max_players) : 4;
+    logger.info(`Create game request ${name}, ${maxPlayers} by ${id}`);
+    const game = await Games.create(id, name, maxPlayers);
+    logger.info(`Game created: ${game.id}`);
 
     const io = request.app.get("io") as Server;
     io.emit(GAME_CREATE, { ...game });
 
     response.redirect(`/games/${game.id}`);
-  } catch (error: unknown) {
+  } catch (error: any) {
     logger.error("Error creating game:", error);
-    response.redirect("/");
+    response.redirect("/lobby");
   }
 });
 
 router.get("/:id", async (request, response) => {
   const { id } = request.params;
+  const game = await Games.get(parseInt(id));
 
-  response.render("games/game", { id });
+  response.render("games/game", { ...game });
 });
 
 router.post("/:game_id/join", async (request, response) => {
@@ -47,7 +50,7 @@ router.post("/:game_id/join", async (request, response) => {
 
   await Games.join(parseInt(game_id), id);
 
-  response.redirect(`/games/${game_id}`);
+  response.redirect(`/games/${id}`);
 });
 
 export default router;

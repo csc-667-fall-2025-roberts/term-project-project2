@@ -6,7 +6,7 @@ WITH new_message AS (
 )
 SELECT
   new_message.*,
-  users.username,
+  COALESCE(users.display_name, users.username) as username,
   users.email
 FROM new_message, users
 WHERE new_message.user_id=users.id
@@ -14,7 +14,9 @@ WHERE new_message.user_id=users.id
 
 export const RECENT_MESSAGES = `
 SELECT
-  chat.*, users.username, users.email
+  chat.*, 
+  COALESCE(users.display_name, users.username) as username, 
+  users.email
 FROM chat, users
 WHERE users.id=chat.user_id
 ORDER BY chat.time_sent DESC
