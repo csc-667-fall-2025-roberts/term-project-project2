@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Something went wrong</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/css/error.css" />
+</head>
+<body>
+  <main class="wrap">
+    <h1>Oops — Something went wrong</h1>
+    <p><%= message %></p>
+
+    <% if (stack) { %>
+      <details class="stack">
+        <summary>Stack trace (dev only)</summary>
+        <pre><%= stack %></pre>
+      </details>
+    <% } %>
+
+    <div class="actions">
+      <a class="btn" href="/">Go home</a>
+    </div>
+  </main>
+</body>
+</html>

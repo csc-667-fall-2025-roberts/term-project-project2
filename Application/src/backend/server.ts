@@ -66,6 +66,7 @@ app.use("/lobby", requireUser, routes.lobby);
 app.use("/chat", requireUser, routes.chat);
 app.use("/games", requireUser, routes.games);
 
+/*
 app.use((_request, _response, next) => {
   next(createHttpError(404));
 });
@@ -91,6 +92,48 @@ app.use((err: any, req: express.Request, res: express.Response, _next: express.N
   }
 
   res.status(status).render("errors/error", {
+    status,
+    message,
+    stack: isProduction ? null : err.stack,
+  });
+});
+
+const server = httpServer.listen(PORT, () => {
+  logger.info(`Server started on port ${PORT}`);
+});
+
+httpServer.on("error", (error) => {
+  logger.error("Server error:", error);
+});
+*/
+
+// 404: no route matched → render friendly page
+app.use((req, res) => {
+  res.status(404).render("errors/404", { url: req.originalUrl });
+});
+
+// Error handler middleware (must be last)
+app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const status = err.status || 500;
+  const isProduction = process.env.NODE_ENV === "production";
+  const message = isProduction ? "Something went wrong on our side." : (err.message || "Internal Server Error");
+
+  // Skip logging browser-generated requests
+  if (!req.url.startsWith("/.well-known/")) {
+    const errorMsg = `${message} (${req.method} ${req.url})`;
+
+    if (isProduction) {
+      // Production: log stack to file, show short console message
+      logger.error(errorMsg, { stack: err.stack });
+      console.error(`Error ${status}: ${message} - See logs/error.log for details`);
+    } else {
+      // Development: log everything to console
+      logger.error(errorMsg, err);
+    }
+  }
+
+  // Render friendly 500 page (stack only in dev)
+  res.status(status).render("errors/500", {
     status,
     message,
     stack: isProduction ? null : err.stack,

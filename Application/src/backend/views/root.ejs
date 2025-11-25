@@ -4,180 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UNO Game - Welcome</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="/js/bundle.css" />
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-      }
-
-      .welcome-container {
-        text-align: center;
-        max-width: 600px;
-        width: 100%;
-      }
-
-      .logo {
-        font-size: 80px;
-        margin-bottom: 20px;
-        animation: float 3s ease-in-out infinite;
-      }
-
-      @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
-      }
-
-      h1 {
-        font-size: 48px;
-        font-weight: 800;
-        color: white;
-        margin-bottom: 12px;
-        text-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-      }
-
-      .subtitle {
-        font-size: 18px;
-        color: rgba(255, 255, 255, 0.9);
-        margin-bottom: 40px;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      .card {
-        background: white;
-        border-radius: 16px;
-        padding: 40px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        margin-bottom: 20px;
-      }
-
-      .card-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 24px;
-      }
-
-      .button-group {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .btn {
-        display: block;
-        padding: 16px 32px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-size: 18px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.2);
-        transition: left 0.3s;
-      }
-
-      .btn:hover::before {
-        left: 100%;
-      }
-
-      .btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-      }
-
-      .btn:active {
-        transform: translateY(-1px);
-      }
-
-      .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-      }
-
-      .btn-secondary {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-      }
-
-      .features {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 16px;
-        margin-top: 32px;
-      }
-
-      .feature {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 20px;
-        border-radius: 12px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-      }
-
-      .feature-icon {
-        font-size: 32px;
-        margin-bottom: 8px;
-      }
-
-      .feature-text {
-        color: white;
-        font-size: 14px;
-        font-weight: 600;
-      }
-
-      @media (max-width: 640px) {
-        h1 {
-          font-size: 36px;
-        }
-
-        .logo {
-          font-size: 60px;
-        }
-
-        .card {
-          padding: 24px;
-        }
-      }
-    </style>
+    <link rel="icon" type="image/svg+xml" href="/public/favicon.svg" />
+    <link rel="stylesheet" href="/css/root.css" />
   </head>
   <body>
     <div class="welcome-container">
-      <div class="logo">🎴</div>
-      <h1>UNO Game</h1>
-      <p class="subtitle">Play the classic card game with friends online!</p>
+      <div class="logo"><img src="https://media.baamboozle.com/uploads/images/1342282/61aa79d8-fa78-424b-a1a6-ad16606e9224.gif" width="350" height="450"></div> 
+      <h1>Let's Play UNO!</h1>
+      <p class="subtitle">Created by group Project2</p>
 
       <div class="card">
         <div class="card-title">Get Started</div>
         <div class="button-group">
-          <a href="/auth/login" class="btn btn-primary">🔐 Login to Play</a>
-          <a href="/auth/signup" class="btn btn-secondary">✨ Create Account</a>
+          <a href="/auth/login" class="btn btn-primary">Login to Play</a>
+          <a href="/auth/signup" class="btn btn-secondary">Create Account</a>
         </div>
       </div>
 
+      <!--
       <div class="features">
         <div class="feature">
           <div class="feature-icon">🎮</div>
@@ -195,7 +39,8 @@
           <div class="feature-icon">👥</div>
           <div class="feature-text">Multiplayer</div>
         </div>
-      </div>
+      </div> 
+      -->
     </div>
   </body>
 </html>
