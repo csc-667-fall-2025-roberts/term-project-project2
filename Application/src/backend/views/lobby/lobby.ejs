@@ -4,8 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UNO Lobby</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/css/lobby.css">
     <script src="/js/chat.js" defer></script>
+    
+    <!--
     <style>
       * {
         margin: 0;
@@ -70,6 +72,7 @@
       }
 
       /* Chat Area */
+      .games-section,
       #chat-area {
         background: white;
         border-radius: 12px;
@@ -210,13 +213,14 @@
         padding: 40px 20px;
       }
     </style>
+  -->
   </head>
   <body>
     <div class="container">
       <div class="header">
         <div>
-          <div class="welcome">🎮 UNO Game Lobby</div>
-          <div class="user-info">Welcome back, <strong><%= user.username %></strong> (ID: <%= user.id %>)</div>
+          <div class="welcome">UNO Game Lobby</div>
+          <div class="user-info">Welcome back, <strong><%= user.username %>!</strong> (ID: <%= user.id %>)</div>
         </div>
         <a href="/auth/logout" class="logout-btn">Logout</a>
       </div>
@@ -246,8 +250,9 @@
         </div>
       </div>
 
+      <div class="main-content">
       <div class="games-section">
-        <h2 class="games-title">🎲 Available Games</h2>
+        <h2 class="games-title">Available Games</h2>
         <div id="game-list"></div>
         <form action="/games" method="POST" class="create-game-form">
           <div class="form-group">
@@ -266,7 +271,9 @@
               <option value="8">8 Players</option>
             </select>
           </div>
+          <div id="message-submit">
           <button type="submit" class="create-game-btn">+ Create New Game</button>
+        </div>
         </form>
       </div>
 
@@ -279,6 +286,7 @@
         </div>
       </div>
     </div>
+  </div>
 
     <template id="template-chat-message">
       <div class="chat-message">
@@ -356,11 +364,5 @@
         }
       });
     </script>
-  </body>
-</html>
-
-```
-      </div>
-    </template>
   </body>
 </html>

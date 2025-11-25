@@ -116,6 +116,7 @@
     color: white;
   }
 
+/*
   .features {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -141,6 +142,7 @@
     font-size: 14px;
     font-weight: 600;
   }
+  */
 
   @media (max-width: 640px) {
     h1 {
