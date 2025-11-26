@@ -50,14 +50,11 @@ app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
 
 // Serve static files from frontend build directory
-// Dev: src/backend/public (Vite output) | Prod: dist/public
+// Serve ONLY from Vite build output
 const staticPath = isDevelopment
   ? path.join(__dirname, "public")
-  : path.join(__dirname, "..", "public");
+  : path.join(__dirname, "public");
 app.use(express.static(staticPath));
-
-const publicAssetsPath = path.join(__dirname, "..", "..", "Public");
-app.use(express.static(publicAssetsPath));
 
 // Set views directory (relative to this file's location)
 // Dev: src/backend/views | Prod: dist/views
