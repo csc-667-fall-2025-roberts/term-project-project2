@@ -50,7 +50,7 @@ router.post("/:game_id/join", async (request, response) => {
 
   await Games.join(parseInt(game_id), id);
 
-  response.redirect(`/games/${id}`);
+  response.redirect(`/games/${game_id}`);
 });
 
 export default router;
