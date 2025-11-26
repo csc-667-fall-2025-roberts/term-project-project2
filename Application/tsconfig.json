@@ -3,14 +3,14 @@
     "target": "es2020",
     "module": "commonjs",
     "moduleResolution": "node",
-    "paths": {
-      "*": ["./types/*.d.ts"]
-    },
+    "rootDir": "./src",
     "outDir": "./dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["src/backend/**/*", "src/shared/types.d.ts", "src/types"]
+  "include": [
+    "src"
+  ]
 }
