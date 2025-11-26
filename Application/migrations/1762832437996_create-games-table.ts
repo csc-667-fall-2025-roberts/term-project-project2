@@ -8,10 +8,10 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       references: "users",
       onDelete: "CASCADE",
     },
-    start_time: {
-      type: "timestamp",
-      notNull: true,
-    },
+      created_at: {
+        type: "timestamp",
+        notNull: true,
+      },
     is_ready: {
       type: "boolean",
       notNull: true,
