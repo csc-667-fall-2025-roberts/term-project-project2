@@ -25,12 +25,14 @@ if (isDevelopment) {
   liveReloadServer.watch([path.join(__dirname, "views"), path.join(__dirname, "public")]);
 }
 
+
 const app = express();
 const httpServer = createServer(app);
 
-app.set("trust proxy", 1);
-
+// Initialize Socket.IO BEFORE static and routes
 app.set("io", initSockets(httpServer));
+
+app.set("trust proxy", 1);
 
 const PORT = process.env.PORT || 3000;
 
@@ -121,6 +123,12 @@ app.use((req, res) => {
 
 // Error handler middleware (must be last)
 app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  // Check if headers have already been sent
+  if (res.headersSent) {
+    // Delegate to default Express error handler
+    return _next(err);
+  }
+
   const status = err.status || 500;
   const isProduction = process.env.NODE_ENV === "production";
   const message = isProduction ? "Something went wrong on our side." : (err.message || "Internal Server Error");
