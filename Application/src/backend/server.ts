@@ -56,6 +56,10 @@ const staticPath = isDevelopment
   : path.join(__dirname, "public");
 app.use(express.static(staticPath));
 
+// Also serve legacy/static assets from Application/Public
+const publicAssetsPath = path.join(__dirname, "..", "..", "Public");
+app.use(express.static(publicAssetsPath));
+
 // Set views directory (relative to this file's location)
 // Dev: src/backend/views | Prod: dist/views
 app.set("views", path.join(__dirname, "views"));
