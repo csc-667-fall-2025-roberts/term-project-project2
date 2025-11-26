@@ -1,5 +1,5 @@
 import "express-session";
-import { User } from "../types/types.d";
+import { User } from "../types/types";
 
 declare module "express-session" {
   interface SessionData {
