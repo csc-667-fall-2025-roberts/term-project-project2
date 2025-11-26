@@ -13,15 +13,16 @@ export const initSockets = (httpServer: HTTPServer) => {
 
   io.on("connection", (socket) => {
     // @ts-ignore
-    const session = socket.request.session as { id: string; user: User };
+    const session = socket.request.session as { id: string; user?: User };
 
-    logger.info(`socket for user ${session.user.username} established`);
+    const username = session.user?.username || "guest";
+    logger.info(`socket for user ${username} established`);
 
     socket.join(session.id);
     socket.join(GLOBAL_ROOM);
 
     socket.on("close", () => {
-      logger.info(`socket for user ${session.user.username} closed`);
+      logger.info(`socket for user ${username} closed`);
     });
   });
 

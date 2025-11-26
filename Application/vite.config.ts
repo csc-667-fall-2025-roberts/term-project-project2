@@ -3,14 +3,14 @@ import { defineConfig } from "vite";
 
 export default defineConfig(({ command, mode }) => {
   const isDev = mode === "development";
-  const outDir = isDev ? "src/backend/public" : "dist/backend/public";
+  const outDir = isDev ? "src/frontend/public" : "dist/public";
 
   return {
     // Enable public directory for static assets like favicon
-    publicDir: "public",
+    publicDir: "src/frontend/public",
 
     build: {
-      // Dev outputs to src/backend/public, production to dist/public
+      // Dev outputs to src/frontend/public, production to dist/public
       outDir,
       emptyOutDir: isDev, // Clear dev folder on rebuild, but not prod (backend also outputs there)
       rollupOptions: {

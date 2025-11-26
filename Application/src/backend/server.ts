@@ -49,9 +49,12 @@ app.use(
 app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
 
-// Serve static files from public directory (relative to this file's location)
-// Dev: src/backend/public | Prod: dist/public
-app.use(express.static(path.join(__dirname, "public")));
+// Serve static files from frontend build directory
+// Dev: src/frontend/public | Prod: dist/public
+const staticPath = isDevelopment 
+  ? path.join(__dirname, "..", "frontend", "public")
+  : path.join(__dirname, "..", "..", "dist", "public");
+app.use(express.static(staticPath));
 
 // Set views directory (relative to this file's location)
 // Dev: src/backend/views | Prod: dist/views

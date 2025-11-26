@@ -1,7 +1,7 @@
 export const CREATE_MESSAGE = `
 WITH new_message AS (
-  INSERT INTO chat (user_id, message)
-  VALUES ($1, $2)
+  INSERT INTO chat (user_id, message, game_id)
+  VALUES ($1, $2, NULL)
   RETURNING *
 )
 SELECT

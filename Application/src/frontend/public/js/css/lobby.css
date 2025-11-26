@@ -60,16 +60,17 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
-  /* Chat Area */
+  /* Chat and Game Area */
+
+  .games-section,
   #chat-area {
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     padding: 24px;
-    max-width: 800px;
-    margin: 0 auto;
   }
 
+  .games-title,
   .chat-title {
     font-size: 20px;
     font-weight: 700;
@@ -77,6 +78,20 @@
     color: #616161;
   }
 
+  .game-item {
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  .game-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .form-group,
   #message-listing {
     display: flex;
     flex-direction: column;
@@ -88,6 +103,8 @@
     border-radius: 8px;
     margin-bottom: 16px;
     border: 1px solid #e0e0e0;
+    font-size: 14px;
+    color: #666;
   }
 
   #message-listing::-webkit-scrollbar {
@@ -169,6 +186,25 @@
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   }
 
+  .goto-game-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #7ae94b 0%, #2cb208 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .goto-game-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  #game-submit,
   #message-submit button {
     padding: 14px 32px;
     background: linear-gradient(135deg, #7ae94b 0%, #2cb208 100%);
@@ -182,11 +218,13 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
+  #game-submit,
   #message-submit button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
+  #game-submit,
   #message-submit button:active {
     transform: translateY(0);
   }
@@ -199,4 +237,23 @@
     color: #999;
     font-style: italic;
     padding: 40px 20px;
+  }
+
+  .main-content {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    margin-top: 20px;
+  }
+  
+  .main-content .games-section,
+  .main-content #chat-area {
+    flex: 1;
+  }
+  
+  /* On small screens, stack them */
+  @media (max-width: 900px) {
+    .main-content {
+      flex-direction: column;
+    }
   }
