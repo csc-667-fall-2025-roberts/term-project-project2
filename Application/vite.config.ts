@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig(({ command, mode }) => {
   const isDev = mode === "development";
-  const outDir = isDev ? "src/frontend/public" : "dist/public";
+   const outDir = isDev ? "src/backend/public" : "dist/backend/public";
 
   return {
     // Enable public directory for static assets like favicon
@@ -29,7 +29,7 @@ export default defineConfig(({ command, mode }) => {
           // Output CSS to a fixed filename (no hash)
           assetFileNames: (assetInfo) => {
             if (assetInfo.name?.endsWith(".css")) {
-              return "bundle.css";
+              return "[name].css";
             }
             return "assets/[name]-[hash][extname]";
           },
