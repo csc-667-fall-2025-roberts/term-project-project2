@@ -1,5 +1,5 @@
-import type { Game } from "../../../types/types.d";
-import { GameState } from "../../../types/types.d";
+import type { Game } from "../../../types/types";
+import { GameState } from "../../../types/types";
 import db from "../connection";
 import { CREATE_GAME, GAME_BY_ID, GAMES_BY_USER, JOIN_GAME, LIST_GAMES } from "./sql";
 
