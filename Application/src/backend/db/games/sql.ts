@@ -1,6 +1,6 @@
 export const CREATE_GAME = `
-INSERT INTO games (created_by, name, max_players)
-VALUES ($1, $2, $3)
+INSERT INTO games (host_id, name, capacity, state, created_at, is_ready)
+VALUES ($1, $2, $3, 'lobby', CURRENT_TIMESTAMP, false)
 RETURNING *
 `;
 
@@ -10,8 +10,9 @@ VALUES ($1, $2)
 `;
 
 export const LIST_GAMES = `
-SELECT 
+SELECT
   g.*,
+  host.username as host_username,
   COUNT(gp.user_id) AS player_count,
   COALESCE(
     json_agg(
@@ -24,10 +25,11 @@ SELECT
     '[]'
   ) AS players
 FROM games g
+LEFT JOIN users host ON g.host_id = host.id
 LEFT JOIN "gameParticipants" gp ON g.id=gp.game_id
 LEFT JOIN users u ON u.id=gp.user_id
 WHERE g.state=$1
-GROUP BY g.id
+GROUP BY g.id, host.username
 ORDER BY g.created_at DESC
 LIMIT $2
 `;
@@ -38,5 +40,10 @@ WHERE "gameParticipants".game_id=games.id AND user_id=$1
 `;
 
 export const GAME_BY_ID = `
-  SELECT * FROM games WHERE id=$1
+  SELECT
+    g.*,
+    u.username as host_username
+  FROM games g
+  LEFT JOIN users u ON g.host_id = u.id
+  WHERE g.id=$1
 `;

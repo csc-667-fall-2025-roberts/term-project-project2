@@ -41,6 +41,8 @@ router.get("/:id", async (request, response) => {
   const { id } = request.params;
   const game = await Games.get(parseInt(id));
 
+  logger.info("Game data:", game);
+
   response.render("games/game", { ...game });
 });
 

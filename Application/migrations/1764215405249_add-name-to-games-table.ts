@@ -1,15 +1,14 @@
-import { MigrationBuilder } from "node-pg-migrate";
+import { MigrationBuilder } from 'node-pg-migrate';
 
 export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.addColumn("games", {
-    state: {
+    name: {
       type: "varchar(255)",
-      notNull: true,
-      default: "lobby", // Change default if needed
+      notNull: false,
     },
   });
 }
 
 export async function down(pgm: MigrationBuilder): Promise<void> {
-  pgm.dropColumn("games", "state");
+  pgm.dropColumn("games", "name");
 }

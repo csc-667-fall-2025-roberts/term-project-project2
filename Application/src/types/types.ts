@@ -24,15 +24,18 @@ export interface ChatMessage extends DbChatMessage {
 
 export enum GameState {
   LOBBY = "lobby",
-  ACTIVE = "active",
-  COMPLETED = "completed",
+  IN_PROGRESS = "in_progress",
+  ENDED = "ended",
 }
 
 export type Game = {
   id: number;
   name?: string;
-  created_by: number;
-  state: GameState;
-  max_players: number;
+  host_id: number;
+  host_username?: string;
   created_at: Date;
+  is_ready: boolean;
+  capacity: number;
+  winner_id?: number;
+  state: GameState;
 };

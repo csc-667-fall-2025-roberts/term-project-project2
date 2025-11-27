@@ -3,8 +3,8 @@ import { GameState } from "../../../types/types";
 import db from "../connection";
 import { CREATE_GAME, GAME_BY_ID, GAMES_BY_USER, JOIN_GAME, LIST_GAMES } from "./sql";
 
-const create = async (user_id: number, name?: string, maxPlayers: number = 4) =>
-  await db.one<Game>(CREATE_GAME, [user_id, name, maxPlayers]);
+const create = async (user_id: number, name?: string, capacity: number = 4) =>
+  await db.one<Game>(CREATE_GAME, [user_id, name, capacity]);
 
 const join = async (game_id: number, user_id: number) =>
   await db.none(JOIN_GAME, [game_id, user_id]);
