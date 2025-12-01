@@ -19,6 +19,9 @@
     max-width:  1200px;
     width: 100%;
     margin: 0 auto;
+    z-index: 999;
+    position:fixed;
+    padding-left: 70px;
   }
 
   h1 {
@@ -65,14 +68,34 @@
     /* Game area */
   .card {
     border-radius: 16px;
-    padding: 40px;
+    padding: 0px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    margin-bottom: 20px;
   }
   
   .game-area{
     display: flex;
-    justify-content: center; /* Centers horizontally */
-    align-items: center;   /* Centers vertically */
-    height: 100vh;         /* Ensures container takes full viewport height */
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-top: 15%;   /* space under fixed header */
+    padding-bottom: 40px;    /* no big gaps under card stack */
+  }
+
+  .next-player{
+    height:450px;
+    width: 350px;
+    transform: rotate(90deg);
+  }
+
+  .prev-player{
+    height:450px;
+    width: 350px;
+    transform: rotate(-90deg);
+
+  }
+
+  .main-userDeck{
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
