@@ -5,7 +5,10 @@ WITH new_message AS (
   RETURNING *
 )
 SELECT
-  new_message.*,
+  new_message.id,
+  new_message.user_id,
+  new_message.message,
+  new_message.time_sent as created_at,
   COALESCE(users.display_name, users.username) as username,
   users.email
 FROM new_message, users
