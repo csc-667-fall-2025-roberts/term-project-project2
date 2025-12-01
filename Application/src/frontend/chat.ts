@@ -75,6 +75,7 @@ input.addEventListener("keydown", (event) => {
 
 
 socket.on("connect", () => {
+  console.log("Socket connected, loading messages...");
   fetch("/chat/", {
     method: "get",
     credentials: "include",

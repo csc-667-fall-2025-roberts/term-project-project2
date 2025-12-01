@@ -14,11 +14,11 @@ WHERE new_message.user_id=users.id
 
 export const RECENT_MESSAGES = `
 SELECT
-  chat.*, 
-  COALESCE(users.display_name, users.username) as username, 
+  chat.*,
+  COALESCE(users.display_name, users.username) as username,
   users.email
 FROM chat, users
 WHERE users.id=chat.user_id
-ORDER BY chat.time_sent DESC
+ORDER BY chat.time_sent ASC
 LIMIT $1
 `;
