@@ -78,6 +78,14 @@
     color: #616161;
   }
 
+  .create-game-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    margin-top: 24px;
+    color: #616161;
+  }
+
   .game-item {
     padding: 15px;
     margin-bottom: 15px;
@@ -85,10 +93,21 @@
     border-radius: 5px;
   }
 
+  .game-header {
+    margin-bottom: 25px;
+  }
+
   .game-name {
-    font-size: 18px;
+    font-size: 24px;
     font-weight: 700;
-    margin-bottom: 8px;
+  }
+
+  .game-state {
+    display: none;
+  }
+
+  .game-details {
+    margin-bottom: 16px;
   }
 
   .form-group,
@@ -106,6 +125,7 @@
     font-size: 14px;
     color: #666;
   }
+
 
   #message-listing::-webkit-scrollbar {
     width: 8px;
@@ -132,6 +152,37 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s;
     border-left: 4px solid #667eea;
+    width: 80%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    margin-bottom: -8px;
+  }
+
+  .chat-message.own-message {
+    background: #0066cc;
+    color: white;
+    border-left: 4px solid #0052a3;
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  .chat-message.own-message .message-username {
+    color: #e6f2ff;
+  }
+
+  .chat-message.own-message .message-time {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .chat-message.own-message .message-text {
+    color: white;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .chat-message.other-message {
+    margin-left: 0;
+    margin-right: auto;
   }
 
   .chat-message:hover {
@@ -147,7 +198,7 @@
 
   .message-username {
     font-weight: 700;
-    color: #667eea;
+    color: #0066cc;
     font-size: 14px;
   }
 
@@ -162,6 +213,8 @@
     color: #444;
     line-height: 1.5;
     word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
   /* Message Input */

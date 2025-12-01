@@ -20,6 +20,7 @@ export interface DbChatMessage {
 export interface ChatMessage extends DbChatMessage {
   username: string;
   email: string;
+  user_id: number;
 }
 
 export enum GameState {

@@ -14,7 +14,10 @@ WHERE new_message.user_id=users.id
 
 export const RECENT_MESSAGES = `
 SELECT
-  chat.*,
+  chat.id,
+  chat.user_id,
+  chat.message,
+  chat.time_sent as created_at,
   COALESCE(users.display_name, users.username) as username,
   users.email
 FROM chat, users

@@ -9,21 +9,42 @@ const input = document.querySelector<HTMLInputElement>("#message-submit input")!
 const button = document.querySelector<HTMLButtonElement>("#message-submit button")!;
 const messageTemplate = document.querySelector<HTMLTemplateElement>("#template-chat-message")!;
 
-const appendMessage = ({ username, created_at, message }: ChatMessage) => {
+// Get current user ID from page
+const getUserIdFromPage = (): number => {
+  const userInfoText = document.querySelector(".user-info")?.textContent || "";
+  const match = userInfoText.match(/ID: (\d+)/);
+  return match ? parseInt(match[1]) : 0;
+};
+
+const currentUserId = getUserIdFromPage();
+
+const appendMessage = ({ username, created_at, message, user_id }: ChatMessage) => {
   const clone = messageTemplate.content.cloneNode(true) as DocumentFragment;
+  const messageElement = clone.querySelector(".chat-message") as HTMLElement;
 
   const timeSpan = clone.querySelector(".message-time");
   const time = new Date(created_at);
-  timeSpan!.textContent = time.toLocaleDateString();
+  if (isNaN(time.getTime())) {
+    timeSpan!.textContent = "Invalid date";
+  } else {
+    timeSpan!.textContent = time.toLocaleString();
+  }
   console.log(time, timeSpan);
 
   const usernameSpan = clone.querySelector(".message-username");
-  usernameSpan!.textContent = username;
-  console.log(username, usernameSpan);
-
   const msgSpan = clone.querySelector(".message-text");
   msgSpan!.textContent = message;
   console.log(message, msgSpan);
+
+  // Add class to identify own messages
+  if (user_id === currentUserId) {
+    messageElement.classList.add("own-message");
+    usernameSpan!.textContent = "You";
+  } else {
+    messageElement.classList.add("other-message");
+    usernameSpan!.textContent = username;
+  }
+  console.log(username, usernameSpan);
 
   listing.appendChild(clone);
 };
