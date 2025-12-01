@@ -12,7 +12,7 @@ VALUES ($1, $2)
 export const LIST_GAMES = `
 SELECT
   g.*,
-  host.username as host_username,
+  COALESCE(host.display_name, host.username) as host_username,
   COUNT(gp.user_id) AS player_count,
   COALESCE(
     json_agg(
@@ -29,7 +29,7 @@ LEFT JOIN users host ON g.host_id = host.id
 LEFT JOIN "gameParticipants" gp ON g.id=gp.game_id
 LEFT JOIN users u ON u.id=gp.user_id
 WHERE g.state=$1
-GROUP BY g.id, host.username
+GROUP BY g.id, COALESCE(host.display_name, host.username)
 ORDER BY g.created_at DESC
 LIMIT $2
 `;
@@ -42,7 +42,7 @@ WHERE "gameParticipants".game_id=games.id AND user_id=$1
 export const GAME_BY_ID = `
   SELECT
     g.*,
-    u.username as host_username
+    COALESCE(u.display_name, u.username) as host_username
   FROM games g
   LEFT JOIN users u ON g.host_id = u.id
   WHERE g.id=$1

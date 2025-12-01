@@ -186,12 +186,14 @@
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   }
 
-  .goto-game-btn {
+  .goto-game-btn,
+  .create-game-btn {
     display: inline-block;
     padding: 10px 20px;
     background: linear-gradient(135deg, #7ae94b 0%, #2cb208 100%);
     color: white;
     text-decoration: none;
+    border: none;
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
@@ -199,7 +201,8 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
-  .goto-game-btn:hover {
+  .goto-game-btn:hover,
+  .create-game-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
