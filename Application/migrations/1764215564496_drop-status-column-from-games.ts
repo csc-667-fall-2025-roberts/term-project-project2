@@ -8,7 +8,7 @@ export async function down(pgm: MigrationBuilder): Promise<void> {
   pgm.addColumn("games", {
     status: {
       type: "varchar(255)",
-      notNull: true,
+      notNull: false,
       check: "status IN ('in_progress', 'ended')",
     },
   });

@@ -40,3 +40,32 @@ export type Game = {
   winner_id?: number;
   state: GameState;
 };
+
+export type GamePlayer = {
+  user_id: number;
+  username: string;
+  display_name?: string;
+  email: string;
+  position: number;
+  game_id: number;
+};
+
+export type GameCard = {
+  id: number;
+  game_id: number;
+  card_id: number;
+  owner_id: number;
+  location: number;
+  value: string;
+  color: string;
+
+};
+
+export type Card = {
+  id: number;
+  color: string;
+  value: string;
+
+};
+
+

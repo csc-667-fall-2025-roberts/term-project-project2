@@ -151,7 +151,6 @@
     background: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     transition: transform 0.2s;
-    border-left: 4px solid #667eea;
     width: 80%;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -161,7 +160,6 @@
   .chat-message.own-message {
     background: #0066cc;
     color: white;
-    border-left: 4px solid #0052a3;
     margin-left: auto;
     margin-right: 0;
   }
@@ -183,10 +181,6 @@
   .chat-message.other-message {
     margin-left: 0;
     margin-right: auto;
-  }
-
-  .chat-message:hover {
-    transform: translateX(4px);
   }
 
   .message-header {
