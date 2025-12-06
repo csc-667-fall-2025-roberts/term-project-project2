@@ -50,7 +50,7 @@ export const GAME_BY_ID = `
 
 // get players in a game
 export const GET_PLAYERS = `
-SELECT user_id, username, email, display_name, player_order FROM "gameParticipants"
+SELECT user_id, username, email, display_name, player_order as position FROM "gameParticipants"
 JOIN users ON users.id = user_id
 WHERE game_id = $1 ORDER BY player_order
 `;
