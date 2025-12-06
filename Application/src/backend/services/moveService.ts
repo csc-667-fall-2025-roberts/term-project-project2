@@ -81,8 +81,8 @@ export async function playACard(
 
   const isReverse = card.value === "reverse";
   const isSkip = card.value === "skip";
-  const isDraw2 = card.value === "draw2";
-  const isWildDraw4 = card.value === "wild_draw4";
+  const isDraw2 = card.value === "draw_two";
+  const isWildDraw4 = card.value === "wild_draw_four";
 
   let playType: 'play' | 'draw' | 'skip' | 'reverse' = 'play';
   if(isReverse) playType = 'reverse';

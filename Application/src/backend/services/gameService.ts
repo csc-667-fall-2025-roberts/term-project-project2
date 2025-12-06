@@ -53,7 +53,7 @@ export async function StartGame(gameId: number): Promise<{firstPlayerId: number}
     if(topCards.length > 0){
       const starterCard = topCards[0];
       const isValidStarter = starterCard.color !== "wild" &&
-                            !["skip", "reverse", "draw2", "wild_draw4"].includes(starterCard.value);
+                            !["skip", "reverse", "draw_two", "wild_draw_four"].includes(starterCard.value);
 
       if(isValidStarter){
         await GameCards.playCard(starterCard.id, gameId, 0);
