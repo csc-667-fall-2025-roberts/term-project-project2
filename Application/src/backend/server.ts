@@ -74,6 +74,7 @@ app.use("/auth", routes.auth);
 app.use("/lobby", requireUser, routes.lobby);
 app.use("/chat", requireUser, routes.chat);
 app.use("/games", requireUser, routes.games);
+app.use("/readyup", requireUser, routes.readyup);
 
 /*
 app.use((_request, _response, next) => {
