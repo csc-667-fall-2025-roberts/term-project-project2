@@ -5,6 +5,9 @@ import { Games, Cards } from "../db";
 import logger from "../lib/logger";
 import { StartGame, getCurrentTurn, endGame } from "../services/gameService";
 import { playACard, drawCards, endTurn } from "../services/moveService";
+import { broadcastJoin, broadcastGameStart, broadcastGameStateUpdate } from "../sockets/pre-game-sockets";
+import { broadcastTurnChange, broadcastCardPlay, broadcastDraw, broadcastHandUpdate, broadcastGameEnd, broadcastSkip, broadcastReverse, broadcastColorChosen } from "../sockets/gameplay-socket";
+import { GameState } from "../../types/types";
 
 const router = express.Router();
 
@@ -56,20 +59,34 @@ router.get("/:id", async (request, response) => {
 });
 
 router.post("/:game_id/join", async (request, response) => {
-  const { id } = request.session.user!;
+  const { id, username } = request.session.user!;
   const { game_id } = request.params;
+  const gameId = parseInt(game_id);
 
-  await Games.join(parseInt(game_id), id);
+  await Games.join(gameId, id);
+
+  const io = request.app.get("io") as Server;
+  broadcastJoin(io, gameId, id, username);
 
   response.redirect(`/games/${game_id}`);
 });
 
-// start game route 
+// start game route
 router.post( "/:game_id/start", async (request, response) => {
   try {
   const gameId = parseInt(request.params.game_id);
-  await StartGame(gameId);
-  response.redirect(`/games/${gameId}`); // change later braodcast to players
+  const result = await StartGame(gameId);
+
+  const io = request.app.get("io") as Server;
+  const topCard = await Cards.getTopCard(gameId);
+
+  broadcastGameStateUpdate(io, gameId, GameState.IN_PROGRESS);
+  broadcastGameStart(io, gameId, result.firstPlayerId, { id: topCard!.id, color: topCard!.color, value: topCard!.value });
+
+  const turnInfo = await getCurrentTurn(gameId);
+  broadcastTurnChange(io, gameId, turnInfo.currentPlayerId, turnInfo.direction, turnInfo.playerOrder);
+
+  response.redirect(`/games/${gameId}`);
   } catch (error: any) {
     logger.error("Error starting game:", error);
     response.redirect(`/games/${request.params.game_id}`);
@@ -97,6 +114,13 @@ router.post("/:game_id/end", async (request, response) => {
 
     await endGame(gameId, winnerId);
 
+    const io = request.app.get("io") as Server;
+    const players = await Games.getPlayers(gameId);
+    const winner = players.find(p => p.user_id === winnerId);
+
+    broadcastGameEnd(io, gameId, winnerId, winner?.username || 'Unknown');
+    broadcastGameStateUpdate(io, gameId, GameState.ENDED);
+
     response.status(202).json({ message: "Game ended successfully" });
   } catch (error: any) {
     logger.error("Error ending game:", error);
@@ -108,8 +132,11 @@ router.post("/:game_id/end", async (request, response) => {
 router.post("/:game_id/play", async (request, response) => {
   try {
     const gameId = parseInt(request.params.game_id);
-    const { id: userId } = request.session.user!;
+    const { id: userId, username } = request.session.user!;
     const { cardId, chosenColor } = request.body;
+
+    const playerHand = await Cards.getHand(gameId, userId);
+    const card = playerHand.find(c => c.id === cardId);
 
     const result = await playACard(gameId, userId, cardId, chosenColor);
 
@@ -117,12 +144,39 @@ router.post("/:game_id/play", async (request, response) => {
       return response.status(400).json({ error: result.message });
     }
 
+    const io = request.app.get("io") as Server;
+
+    broadcastCardPlay(io, gameId, userId, username, { id: card!.id, color: chosenColor || card!.color, value: card!.value });
+
+    // Get turn info for special card effects
+    const turnInfo = await getCurrentTurn(gameId);
+
+    // Handle special card effects
+    if (card!.value === 'skip') {
+      const players = await Games.getPlayers(gameId);
+      const skipped = players.find(p => p.user_id === turnInfo.currentPlayerId);
+      broadcastSkip(io, gameId, turnInfo.currentPlayerId, skipped?.username || 'Unknown');
+    }
+    if (card!.value === 'reverse') {
+      broadcastReverse(io, gameId, turnInfo.direction);
+    }
+    if ((card!.value === 'wild' || card!.value === 'wild_draw_four') && chosenColor) {
+      broadcastColorChosen(io, gameId, userId, username, chosenColor);
+    }
+
+    const handCounts = await Cards.getHandCount(gameId);
+    broadcastHandUpdate(io, gameId, handCounts);
+
     if (result.winner) {
+      broadcastGameEnd(io, gameId, result.winner, username);
+      broadcastGameStateUpdate(io, gameId, GameState.ENDED);
       return response.status(200).json({
         message: result.message,
         winner: result.winner
       });
     }
+
+    broadcastTurnChange(io, gameId, turnInfo.currentPlayerId, turnInfo.direction, turnInfo.playerOrder);
 
     response.status(200).json({ message: "Card played successfully" });
   } catch (error: any) {
@@ -135,10 +189,16 @@ router.post("/:game_id/play", async (request, response) => {
 router.post("/:game_id/draw", async (request, response) => {
   try {
     const gameId = parseInt(request.params.game_id);
-    const { id: userId } = request.session.user!;
+    const { id: userId, username } = request.session.user!;
     const { count } = request.body;
 
     const result = await drawCards(gameId, userId, count || 1);
+
+    const io = request.app.get("io") as Server;
+    broadcastDraw(io, gameId, userId, username, count || 1);
+
+    const handCounts = await Cards.getHandCount(gameId);
+    broadcastHandUpdate(io, gameId, handCounts);
 
     response.status(200).json({
       message: "Cards drawn successfully",
@@ -157,6 +217,10 @@ router.post("/:game_id/end-turn", async (request, response) => {
     const { id: userId } = request.session.user!;
 
     await endTurn(gameId, userId);
+
+    const io = request.app.get("io") as Server;
+    const turnInfo = await getCurrentTurn(gameId);
+    broadcastTurnChange(io, gameId, turnInfo.currentPlayerId, turnInfo.direction, turnInfo.playerOrder);
 
     response.status(200).json({ message: "Turn ended successfully" });
   } catch (error: any) {

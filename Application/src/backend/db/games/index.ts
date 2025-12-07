@@ -1,7 +1,7 @@
 import type { Game, GamePlayer } from "../../../types/types";
 import { GameState } from "../../../types/types";
 import db from "../connection";
-import {CREATE_GAME, GAME_BY_ID, GAMES_BY_USER, JOIN_GAME, LIST_GAMES, GET_PLAYERS, SET_PLAYER_POSITION, START_GAME, UPDATE_GAME, LEAVE_GAME, GET_PLAYER_COUNT,CHECK_PLAYER_IN_GAME,
+import {CREATE_GAME, GAME_BY_ID, GAMES_BY_USER, JOIN_GAME, LIST_GAMES, GET_PLAYERS, SET_PLAYER_POSITION, START_GAME, UPDATE_GAME, LEAVE_GAME, GET_PLAYER_COUNT,CHECK_PLAYER_IN_GAME, TOGGLE_PLAYER_READY,
 } from "./sql";
 
 const create = (user_id: number, name?: string, capacity: number = 4) =>
@@ -42,7 +42,12 @@ const checkPlayerInGame = (game_id: number, user_id: number) =>
   db.one<{ is_player: boolean }>(CHECK_PLAYER_IN_GAME, [game_id, user_id])
     .then(result => result.is_player);
 
+const togglePlayerReady = (game_id: number, user_id: number) =>
+  db.one<{ is_ready: boolean }>(TOGGLE_PLAYER_READY, [game_id, user_id])
+    .then(result => result.is_ready);
+
 export {create,get,getByUser,join,list,getPlayers,setPlayerPosition,startGame,updateGame,leaveGame,
   getPlayerCount,
   checkPlayerInGame,
+  togglePlayerReady,
 };

@@ -89,4 +89,12 @@ export const CHECK_PLAYER_IN_GAME = `
 SELECT EXISTS(SELECT 1 FROM "gameParticipants" WHERE game_id = $1 AND user_id = $2) as is_player
 `;
 
+// Toggle player ready status
+export const TOGGLE_PLAYER_READY = `
+UPDATE "gameParticipants"
+SET is_ready = NOT is_ready
+WHERE game_id = $1 AND user_id = $2
+RETURNING is_ready
+`;
+
 

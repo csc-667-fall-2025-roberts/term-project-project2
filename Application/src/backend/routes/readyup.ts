@@ -1,6 +1,8 @@
 import express from "express";
+import { Server } from "socket.io";
 import { Games } from "../db";
 import logger from "../lib/logger";
+import { broadcastPlayerReady } from "../sockets/pre-game-sockets";
 
 const router = express.Router();
 
@@ -18,6 +20,23 @@ router.get("/:id", async (req, res, next) => {
     res.render("readyup/readyup", { ...game });
   } catch (err) {
     next(err);
+  }
+});
+
+router.post("/:game_id/toggle", async (req, res) => {
+  try {
+    const gameId = parseInt(req.params.game_id);
+    const { id: userId } = req.session.user!;
+
+    const isReady = await Games.togglePlayerReady(gameId, userId);
+
+    const io = req.app.get("io") as Server;
+    broadcastPlayerReady(io, gameId, userId, isReady);
+
+    res.status(200).json({ isReady });
+  } catch (error: any) {
+    logger.error("Error toggling ready status:", error);
+    res.status(500).json({ error: error.message });
   }
 });
 
