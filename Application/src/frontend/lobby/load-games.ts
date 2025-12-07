@@ -20,7 +20,7 @@ const createGameElement = (game: Game) => {
   ).toLocaleDateString();
 
   const goToGameBtn = gameItem.querySelector(".goto-game-btn") as HTMLAnchorElement;
-  goToGameBtn.href = `/games/${game.id}`;
+  goToGameBtn.href = `/readyup/${game.id}`;
 
   return gameItem;
 };
