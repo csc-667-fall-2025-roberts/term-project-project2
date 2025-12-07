@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/readyup.css" />
+</head>
+
+<body>
+    <!-- Welcome / Game Info -->
+    <div class="welcome-container">
+        <h1>Welcome to game <%= id %>
+        </h1>
+        <div class="header">
+            <div>
+                <div class="game-info">
+                    <%= name %> with max players <%= capacity %>, created at
+                            <%= (new Date(created_at)).toLocaleDateString() %> by
+                                <%= host_username %>
+                </div>
+            </div>
+            <a href="/lobby" class="back-btn">Return to Lobby</a>
+        </div>
+    </div>
+    <!-- Main Ready Container -->
+    <div class="ready-container">
+        <!-- Players Grid -->
+        <div class="players-grid" id="playersGrid">
+            <!-- Players will be dynamically inserted here -->
+
+            <!-- Example Player 1 (Host - Ready) -->
+            <div class="player-card host ready">
+                <div class="player-avatar">
+                    <div class="avatar-circle">P1</div>
+                </div>
+                <div class="player-info">
+                    <div class="player-name">Player One</div>
+                    <div class="player-status">Ready!</div>
+                </div>
+                <div class="ready-indicator ready">
+                    <span class="checkmark">✓</span>
+                </div>
+            </div>
+
+            <!-- Example Player 2 (Not Ready) -->
+            <div class="player-card">
+                <div class="player-avatar">
+                    <div class="avatar-circle">P2</div>
+                </div>
+                <div class="player-info">
+                    <div class="player-name">Player Two</div>
+                    <div class="player-status">Waiting...</div>
+                </div>
+                <div class="ready-indicator">
+                    <span class="waiting-dots">●●●</span>
+                </div>
+            </div>
+
+            <!-- Example Player 3 (You - Current User) -->
+            <div class="player-card current-user">
+                <div class="player-avatar">
+                    <div class="avatar-circle">YOU</div>
+                </div>
+                <div class="player-info">
+                    <div class="player-name">You</div>
+                    <div class="player-status">Not Ready</div>
+                </div>
+                <div class="ready-indicator">
+                    <span class="waiting-dots">●●●</span>
+                </div>
+            </div>
+
+            <!-- Empty Slot -->
+            <div class="player-card empty-slot">
+                <div class="player-avatar">
+                    <div class="avatar-circle empty">?</div>
+                </div>
+                <div class="player-info">
+                    <div class="player-name">Waiting for player...</div>
+                    <div class="player-status">Empty</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ready Status Summary -->
+        <div class="ready-summary">
+            <div class="ready-count">
+                <span id="readyCount">1</span> / <span id="totalPlayers">4</span> Players Ready
+            </div>
+            <div class="ready-progress-bar">
+                <div class="ready-progress-fill" id="progressFill" style="width: 25%;"></div>
+            </div>
+        </div>
+
+        <!-- Ready Button -->
+        <div class="ready-button-container">
+            <button id="readyButton" class="ready-btn" onclick="toggleReady()">
+                <span class="btn-text">I'm Ready!</span>
+            </button>
+        </div>
+    </div>
+</body>
+
+</html>
