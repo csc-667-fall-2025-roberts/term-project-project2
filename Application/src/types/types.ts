@@ -37,6 +37,7 @@ export type Game = {
   created_at: Date;
   is_ready: boolean;
   capacity: number;
+  player_count?: number;
   winner_id?: number;
   state: GameState;
 };
@@ -48,6 +49,7 @@ export type GamePlayer = {
   email: string;
   position: number;
   game_id: number;
+  is_ready: boolean;
 };
 
 export type GameCard = {

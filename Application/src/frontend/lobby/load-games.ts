@@ -14,7 +14,7 @@ const createGameElement = (game: Game) => {
   gameItem.querySelector(".game-name")!.textContent = game.name ?? `Game ${game.id}`;
   gameItem.querySelector(".game-created-by")!.textContent = game.host_username || `User ${game.host_id}`;
   gameItem.querySelector(".game-state")!.textContent = game.state;
-  gameItem.querySelector(".max-players")!.textContent = `${game.capacity}`;
+  gameItem.querySelector(".max-players")!.textContent = `${game.player_count || 0}/${game.capacity}`;
   gameItem.querySelector(".created-at")!.textContent = new Date(
     game.created_at,
   ).toLocaleDateString();

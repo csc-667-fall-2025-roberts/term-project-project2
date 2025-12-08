@@ -9,12 +9,24 @@ const router = express.Router();
 router.get("/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
+    const gameId = parseInt(id);
+    const { id: userId, username } = req.session.user!;
 
-    const game = await Games.get(parseInt(id));
+    const game = await Games.get(gameId);
     logger.info("Readyup game data:", game);
 
     if (!game) {
       return res.status(404).render("errors/404", { url: req.originalUrl });
+    }
+
+    const isPlayerInGame = await Games.checkPlayerInGame(gameId, userId);
+    if (!isPlayerInGame) {
+      await Games.join(gameId, userId);
+      logger.info(`User ${userId} automatically joined game ${gameId}`);
+
+      const io = req.app.get("io") as Server;
+      const { broadcastJoin } = await import("../sockets/pre-game-sockets");
+      broadcastJoin(io, gameId, userId, username);
     }
 
     res.render("readyup/readyup", { ...game });
