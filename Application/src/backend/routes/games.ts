@@ -35,7 +35,7 @@ router.post("/", async (request, response) => {
     const io = request.app.get("io") as Server;
     io.emit(GAME_CREATE, { ...game });
 
-    response.redirect(`/games/${game.id}`);
+    response.redirect(`/readyup/${game.id}`);
   } catch (error: any) {
     logger.error("Error creating game:", error);
     response.redirect("/lobby");
