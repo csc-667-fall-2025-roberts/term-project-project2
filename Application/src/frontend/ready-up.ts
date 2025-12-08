@@ -11,6 +11,7 @@ let players: GamePlayer[] = [];
 
 const playersList = document.querySelector<HTMLUListElement>("#playersGrid")!;
 const readyButton = document.querySelector<HTMLButtonElement>("#readyButton")!;
+const startGameButton = document.querySelector<HTMLButtonElement>("#startGameButton")!;
 const readyCountSpan = document.querySelector<HTMLSpanElement>("#readyCount")!;
 const totalPlayers = document.querySelector<HTMLSpanElement> ( "#totalPlayers")!;
 const progressFill = document.querySelector<HTMLDivElement>("#progressFill")!;
@@ -46,7 +47,7 @@ const renderedPlayers = () => {
                     <div class="player-status">${player.is_ready ? "Ready" : "Waiting.."} </div>
                  </div>   
                  <div class="ready-indicator ${player.is_ready ? "ready" : ""}">
-                   ${player.is_ready ? '<span class="checkmark">✓</span>' : '<div class="dot"></div><div class="dot"></div>'}
+                   ${player.is_ready ? '<span class="checkmark">✓</span>' : '<div class="dot"></div><div class="dot"></div><div class="dot"></div>'}
                  </div>
       </div>
     `);
@@ -80,6 +81,8 @@ const updateReadyStatus = () => {
     progressFill.style.width = `${percentage}%`;
 
     const me = players.find((p) => p.user_id === currentUserId);
+    const isHost = me?.position === 1;
+    
     if (me) {
         if (me.is_ready) {
             readyButton.classList.add("ready");
@@ -89,6 +92,10 @@ const updateReadyStatus = () => {
             readyButton.querySelector(".btn-text")!.textContent = "I'm Ready!";
         }
     }
+    
+    // Show start game button if: host + at least 2 players ready (including host)
+    const canStartGame = isHost && readyCount >= 2 && players.length >= 2;
+    startGameButton.style.display = canStartGame ? "block" : "none";
 };
 
 socket.on(EVENTS.PLAYER_JOINED, (data: { gameId: number; userId: number; username: string }) => {
@@ -115,7 +122,7 @@ socket.on(EVENTS.PLAYER_READY, (data: { gameId: number; userId: number; isReady:
 });
 
 socket.on(EVENTS.GAME_START, (data: { gameId: number; starterId: number; topCard: any }) => {
-    console.log(EVENTS.GAME_START, data);
+    console.log("Received GAME_START event:", EVENTS.GAME_START, data);
 
     window.location.href = `/games/${gameId}`;
 });
@@ -133,7 +140,42 @@ readyButton.addEventListener("click", (event) => {
     toggleReady();
 });
 
+startGameButton.addEventListener("click", async (event) => {
+    event.preventDefault();
+    
+    disableButtor("Starting...")
+    
+    try {
+        const response = await fetch(`/games/${gameId}/start`, {
+            method: "post",
+            credentials: "include",
+        });
+        
+        if (response.ok) {
+            console.log("Game started successfully");
+            window.location.href = `/games/${gameId}`;
+        } else {
+            console.error("Failed to start game");
+            enableButton("Start Game");
+        
+        }
+    } catch (error) {
+        console.error("Error starting game:", error);
+        enableButton("Start Game");
+    }
+
+    function disableButtor(buttonText: string) {
+        startGameButton.disabled = true;
+        startGameButton.querySelector(".btn-text")!.textContent = buttonText
+    }
+
+    function enableButton(buttonText: string) {
+        startGameButton.disabled = false;
+        startGameButton.querySelector(".btn-text")!.textContent = buttonText
+    }
+});
+
 socket.on("connect", () => {
-    console.log("Socket connected, loading players...");
+    console.log("Socket connected for gameId:", gameId);
     loadPlayers();
 });

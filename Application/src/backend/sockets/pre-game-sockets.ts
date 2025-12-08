@@ -24,7 +24,9 @@ export function broadcastPlayerReady(io: Server, gameId: number, userId: number,
 // broadcasts when the game starts
 export function broadcastGameStart( io: Server, gameId: number, starterId: number, topCard: { id: number; color: string; value: string }
 ): void {
-    io.to(gameRoom(gameId)).emit(GAME_START, { gameId, starterId, topCard});
+    const room = gameRoom(gameId);
+    console.log(`Broadcasting GAME_START to room: ${room}`);
+    io.to(room).emit(GAME_START, { gameId, starterId, topCard});
 }
 
 // broadcasts when game state changes
