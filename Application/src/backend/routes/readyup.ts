@@ -1,4 +1,4 @@
-import express from "express";
+import express, { response } from "express";
 import { Server } from "socket.io";
 import { Games } from "../db";
 import logger from "../lib/logger";
@@ -49,6 +49,24 @@ router.post("/:game_id/toggle", async (req, res) => {
   } catch (error: any) {
     logger.error("Error toggling ready status:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.get ( "/:game_id/players", async (request,response) => {
+  try {
+    const gameId = parseInt(request.params.game_id);
+    const players = await Games.getPlayers(gameId);
+    const game = await Games.get(gameId);
+    const {id: userId} = request.session.user!;
+    const isPlayerInGame = await Games.checkPlayerInGame(gameId, userId);
+    if (!isPlayerInGame) {
+      return response.status(403).json({ error: "User not in game" });
+    }
+
+    response.json({ players, currentUserId: userId, capacity: game.capacity })
+  } catch (error: any) {
+    logger.error("Error fetching readyup players:", error);
+    response.status(500).json({ error: error.message });
   }
 });
 
