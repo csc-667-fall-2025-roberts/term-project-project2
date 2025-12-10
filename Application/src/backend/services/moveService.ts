@@ -132,7 +132,8 @@ export async function drawCards(
     throw new Error("Not enough cards in deck");
   }
 
-  const cardIds = await GameCards.drawCards(gameId, userId, count);
+  const drawnCards = await GameCards.drawCards(gameId, userId, count);
+  const cardIds = drawnCards.map(card => card.id);
 
   return { success: true, cardIds };
 }
@@ -153,7 +154,7 @@ export async function endTurn(
     throw new Error("Not your turn");
   }
 
-  await Moves.createMove(gameId, userId, 'draw', undefined, undefined);
+  await Moves.createMove(gameId, userId, 'draw', undefined, undefined, undefined, false);
 
   return { success: true };
 }

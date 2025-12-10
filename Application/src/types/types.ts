@@ -40,6 +40,7 @@ export type Game = {
   player_count?: number;
   winner_id?: number;
   state: GameState;
+  current_turn: number;
 };
 
 export type GamePlayer = {
@@ -70,4 +71,11 @@ export type Card = {
 
 };
 
+export interface DisplayGameCard
+  extends GameCard, Omit<Card, 'id' >
+  {
+    user_id?: number;
+    value: string; 
 
+
+  }

@@ -1,29 +1,55 @@
 import db from "../connection";
-import { CREATE_DECK, DRAW_CARDS, GET_HAND, PLAY_CARD, GET_TOP_Card, GET_HAND_COUNT, GET_DECK_COUNT }  from "./sql";
-import { GameCard } from "../../../types/types";
+import { CREATE_DECK, DRAW_CARDS, GET_HAND, PLAY_CARD, GET_TOP_Card, GET_HAND_COUNT, GET_DECK_COUNT, DEAL_CARDS }  from "./sql";
+import { GameCard, DisplayGameCard } from "../../../types/types";
 
-const createDeck = (game_id: number) =>
-  db.none(CREATE_DECK, [game_id]);
+ const createDeck = async(game_id: number)=> 
+{
+  await db.none(CREATE_DECK, [game_id]);
+};
 
-const drawCards = (game_id: number, player_id: number, count: number) =>
-  db.manyOrNone<{ id: number }>(DRAW_CARDS, [game_id, player_id, count])
-    .then(cards => cards.map(card => card.id));
+const drawCards = async (game_id: number, player_id: number, limit: number) => {
+  return await db.many<GameCard>(DRAW_CARDS, [game_id, player_id, limit])
+    
+};
 
-const getHand = (game_id: number, player_id: number) =>
-  db.manyOrNone<GameCard>(GET_HAND, [game_id, player_id]);
+const dealCards = async (gameId : number, playerId : number, cardIds : number[]) => {
+  await db.none( DEAL_CARDS, [gameId, playerId, cardIds ]);
 
-const playCard = (card_id: number, game_id: number, player_id: number) =>
-  db.oneOrNone(PLAY_CARD, [card_id, game_id, player_id])
-    .then(result => result !== null);
+}
 
-const getTopCard = (game_id: number) =>
-  db.oneOrNone<GameCard>(GET_TOP_Card, [game_id]);
+const getHand = async (game_id: number, player_id: number) =>
+  await db.manyOrNone<GameCard>(GET_HAND, [game_id, player_id]);
 
-const getHandCount = (game_id: number) =>
-  db.manyOrNone<{ owner_id: number; hand_count: number }>(GET_HAND_COUNT, [game_id]);
+const playCard = async (card_id: number, game_id: number, player_id: number) => {
+  const result = await db.oneOrNone(PLAY_CARD, [card_id, game_id, player_id]);
+  return result !== null;
+};
 
-const getDeckCount = (game_id: number) =>
-  db.one<{ deck_count: number }>(GET_DECK_COUNT, [game_id])
-    .then(result => result.deck_count);
+const getTopCard = async (game_id: number) =>
+   await db.oneOrNone<DisplayGameCard>(GET_TOP_Card, [game_id]);
 
-export { createDeck, drawCards, getHand, playCard, getTopCard, getHandCount, getDeckCount };
+const getHandCount = async (game_id: number) =>
+  await db.manyOrNone<{ owner_id: number; hand_count: number }>(GET_HAND_COUNT, [game_id]);
+
+const getDeckCount = async (game_id: number) => {
+  const result = await db.one<{ deck_count: number }>(GET_DECK_COUNT, [game_id]);
+  return result.deck_count;
+};
+
+const playerHands = async (gameId: number) => {
+  const handCounts = await getHandCount(gameId);
+  const result: Record<number, GameCard[]> = {};
+
+  if (!handCounts) return result;
+
+  for (const { owner_id } of handCounts) {
+    const hand = await getHand(gameId, owner_id);
+    if (hand && hand.length > 0) {
+      result[owner_id] = hand;
+    }
+  }
+
+  return result;
+};
+
+export { createDeck, drawCards, getHand, playCard, getTopCard, getHandCount, getDeckCount, dealCards, playerHands };

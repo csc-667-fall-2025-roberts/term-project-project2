@@ -24,6 +24,20 @@ RETURNING id;
 
 `;
 
+export const DEAL_CARDS = `
+UPDATE cards SET owner_id = $1
+WHERE id = ANY($2) AND game_id = $3;
+`; 
+
+export const TOP_CARDS = `
+SELECT c.id, dc.color, dc.value, c.location, c.owner_id
+FROM cards c
+JOIN deck_cards dc ON c.deck_card_id = dc.id
+WHERE c.game_id = $1 AND c.owner_id = 0 AND c.location > 0
+ORDER BY c.location
+`;
+
+
 // get player hand with card details 
 export const GET_HAND = `
 SELECT c.id, dc.color, dc.value
@@ -64,10 +78,10 @@ WHERE game_id = $1 AND owner_id != 0
 GROUP BY owner_id;
 `;
 
-// get deck count 
+// get deck count
 
 export const GET_DECK_COUNT = `
 SELECT COUNT(*) as deck_count
-FROM cards 
+FROM cards
 WHERE game_id = $1 AND owner_id = 0 AND location > 0;
 `;

@@ -39,7 +39,7 @@ export async function StartGame(gameId: number): Promise<{firstPlayerId: number}
 
   for (let i = 0; i < shuffledPlayers.length; i++){
     const playerId = shuffledPlayers[i];
-    await GameCards.drawCards(gameId, playerId, Cards_Per_Player);
+    await GameCards.drawCards(gameId, playerIds[i], Cards_Per_Player);
     await Games.setPlayerPosition(gameId, i+1, playerId);
   }
 
@@ -110,7 +110,7 @@ return {
 }
 
 export async function endGame(gameId: number, winnerId?: number): Promise<void> {
- 
+
 
   const game = await Games.get(gameId);
 
@@ -119,4 +119,34 @@ export async function endGame(gameId: number, winnerId?: number): Promise<void> 
   }
 
   await Games.updateGame(gameId, GameState.ENDED, winnerId, true);
+}
+
+export async function getGameState(gameId: number): Promise<{
+  playerHands: any[];
+  currentPlayer: any;
+  players: GamePlayer[];
+  topDiscardCard: GameCard | null;
+}> {
+  const players = await Games.getPlayers(gameId);
+
+  const playerHands = await Promise.all(
+    players.map(async (player) => ({
+      user_id: player.user_id,
+      username: player.username,
+      cards: await GameCards.getHand(gameId, player.user_id),
+      cardCount: (await GameCards.getHand(gameId, player.user_id)).length
+    }))
+  );
+
+  const currentTurnInfo = await getCurrentTurn(gameId);
+
+  const discardPile = await GameCards.getHand(gameId, 0);
+  const topDiscardCard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : null;
+
+  return {
+    playerHands,
+    currentPlayer: currentTurnInfo,
+    players,
+    topDiscardCard
+  };
 }

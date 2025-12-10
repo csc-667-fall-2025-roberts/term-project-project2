@@ -1,7 +1,7 @@
 import db from "../connection";
 import { CREATE_MOVE, GET_GAME_MOVES, GET_LAST_MOVE, GET_TURN_DIRECTION, GET_MOVE_COUNT } from "./sql";
 
-const createMove = (
+const createMove = async (
   gameId: number,
   userId: number,
   playType: 'play' | 'draw' | 'skip' | 'reverse',
@@ -12,19 +12,21 @@ const createMove = (
 ) =>
   db.one(CREATE_MOVE, [gameId, userId, playType, cardId, drawAmount, chosenColor, reverse]);
 
-const getGameMoves = (gameId: number) =>
+const getGameMoves = async (gameId: number) =>
   db.manyOrNone(GET_GAME_MOVES, [gameId]);
 
-const getLastMove = (gameId: number) =>
+const getLastMove = async (gameId: number) =>
   db.oneOrNone(GET_LAST_MOVE, [gameId]);
 
-const getTurnDirection = (gameId: number) =>
-  db.one<{ direction: number }>(GET_TURN_DIRECTION, [gameId])
-    .then(result => result.direction);
+const getTurnDirection = async (gameId: number) => {
+  const result = await db.one<{ direction: number }>(GET_TURN_DIRECTION, [gameId]);
+  return result.direction;
+};
 
-const getMoveCount = (gameId: number) =>
-  db.one<{ count: number }>(GET_MOVE_COUNT, [gameId])
-    .then(result => result.count);
+const getMoveCount = async (gameId: number) => {
+  const result = await db.one<{ count: number }>(GET_MOVE_COUNT, [gameId]);
+  return result.count;
+};
 
 
 export { createMove, getGameMoves, getLastMove, getTurnDirection, getMoveCount};

@@ -97,4 +97,20 @@ WHERE game_id = $1 AND user_id = $2
 RETURNING is_ready
 `;
 
-
+// Get current turn player
+export const GET_CURRENT_TURN_PLAYER = `
+WITH player_count AS (
+  SELECT COUNT(*) as total
+  FROM "gameParticipants"
+  WHERE game_id = $1
+),
+current_game AS (
+  SELECT current_turn
+  FROM games
+  WHERE id = $1
+)
+SELECT gp.user_id, gp.player_order
+FROM "gameParticipants" gp, current_game, player_count
+WHERE gp.game_id = $1
+  AND gp.player_order = ((current_game.current_turn % player_count.total) + 1)
+`;
