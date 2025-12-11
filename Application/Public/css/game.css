@@ -366,6 +366,18 @@ body {
   font-size: 3rem;
 }
 
+.flying-card {
+  position: fixed;
+  pointer-events: none;
+  transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+  z-index: 2000;
+}
+
+#discardCard {
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
 @media (max-width: 768px) {
 
   .game-container {

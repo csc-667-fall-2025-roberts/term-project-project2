@@ -90,9 +90,7 @@
       <div class="pile-container">
         <div class="pile-cards">
           <div class="draw-pile-stack" id="drawPile">
-            <div class="draw-pile-card">🂠</div>
-            <div class="draw-pile-card">🂠</div>
-            <div class="draw-pile-card">🂠</div>
+            <div class="draw-pile-card"></div>
           </div>
         </div>
         <div class="pile-label">
@@ -124,10 +122,7 @@
           Your Hand (<span id="playerCardCount">7</span> cards)
         </div>
         <div class="hand-actions">
-          <button id="unoBtn" class="uno-btn hidden">
-            UNO!
-          </button>
-          <button id="playCardBtn" class="play-card-btn hidden">
+          <button id="playCardBtn" class="play-card-btn">
             Play Card
           </button>
         </div>
@@ -170,6 +165,128 @@
       </div>
     </div>
   </div>
+
+  <script>
+
+    document.addEventListener("DOMContentLoaded", () => {
+      console.log("[game-animations] inline script loaded");
+
+      const hand = document.getElementById("playerCards");
+      const playButton = document.getElementById("playCardBtn");
+      const discardCard = document.getElementById("discardCard");
+
+      let selectedCard = null;
+
+      // Click a card in your hand
+      hand.addEventListener("click", (event) => {
+        // select and pop out
+        const card = event.target.closest(".uno-card.player-card");
+        if (!card) return;
+
+        // Clear previous selection
+        document
+          .querySelectorAll(".uno-card.player-card.selected")
+          .forEach((c) => c.classList.remove("selected"));
+
+        if (selectedCard === card) {
+          card.classList.remove("selected");
+          selectedCard = null;
+        } else {
+          card.classList.add("selected");
+          selectedCard = card;
+        }
+      });
+
+      // Play Card moves selected card to discard pile and set it there
+      playButton.addEventListener("click", (event) => {
+        event.preventDefault();
+
+        if (!selectedCard) {
+          console.log("[game-animations] no card selected");
+          return;
+        }
+        if (!discardCard) {
+          console.warn("[game-animations] #discardCard not found");
+          return;
+        }
+
+        const cardWrapper = selectedCard.closest(".player-card-wrapper");
+
+        // Get positions for the animation
+        const startRect = selectedCard.getBoundingClientRect();
+        const endRect = discardCard.getBoundingClientRect();
+
+        const startCenterX = startRect.left + startRect.width / 2;
+        const startCenterY = startRect.top + startRect.height / 2;
+        const endCenterX = endRect.left + endRect.width / 2;
+        const endCenterY = endRect.top + endRect.height / 2;
+
+        const deltaX = endCenterX - startCenterX;
+        const deltaY = endCenterY - startCenterY;
+
+        // Create a clone
+        const flying = selectedCard.cloneNode(true);
+        flying.classList.remove("selected");
+        flying.classList.add("flying-card");
+
+        flying.style.left = startRect.left + "px";
+        flying.style.top = startRect.top + "px";
+        flying.style.width = startRect.width + "px";
+        flying.style.height = startRect.height + "px";
+        flying.style.transform = "translate(0, 0) scale(1)";
+        flying.style.opacity = "1";
+
+        document.body.appendChild(flying);
+
+        // Trigger movement
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            flying.style.transform =
+              "translate(" + deltaX + "px, " + deltaY + "px) scale(0.9)";
+            flying.style.opacity = "0.9";
+          });
+        });
+
+        flying.addEventListener(
+          "transitionend",
+          () => {
+            flying.remove();
+
+            // Copy the number
+            discardCard.textContent = selectedCard.textContent;
+
+            // Copy the color
+            const baseClasses = ["uno-card"];
+            const colorClasses = ["card-red", "card-blue", "card-green", "card-yellow", "card-wild"];
+            const selectedClasses = selectedCard.className.split(" ");
+
+            const newClasses = [...baseClasses];
+
+            selectedClasses.forEach((cls) => {
+              if (colorClasses.includes(cls)) {
+                newClasses.push(cls);
+              }
+            });
+
+            discardCard.className = newClasses.join(" ");
+
+            // Remove card from hand
+            if (cardWrapper) {
+              cardWrapper.remove();
+            }
+
+            selectedCard = null;
+          },
+          { once: true }
+        );
+      });
+    });
+
+  </script>
+</body>
+
+</html>
+
 </body>
 
 </html>
