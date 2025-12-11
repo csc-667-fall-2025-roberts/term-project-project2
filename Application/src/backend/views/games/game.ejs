@@ -167,7 +167,7 @@
   </div>
 
   <script>
-    // All of this has to be moved onto a seperate js file. 
+    // All of this has to be moved onto a separate js file. 
     // need guidance on location!!
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -176,46 +176,45 @@
       const hand = document.getElementById("playerCards");
       const playButton = document.getElementById("playCardBtn");
       const discardCard = document.getElementById("discardCard");
+      const drawPile = document.getElementById("drawPile");
+      const directionArrow = document.getElementById("directionArrow");
+      const directionText = document.getElementById("directionText");
+
+      let isClockwise = true; // true = normal, false = reversed
+
+      function updateDirectionUI() {
+        if (!directionArrow || !directionText) return;
+
+        if (isClockwise) {
+          directionArrow.classList.remove("reverse");
+          directionText.textContent = "Clockwise";
+        } else {
+          directionArrow.classList.add("reverse");
+          directionText.textContent = "Counterclockwise";
+        }
+      }
+
+      // Color picker 
+      const colorOverlay = document.getElementById("colorPickerOverlay");
+      const colorOptions = colorOverlay
+        ? colorOverlay.querySelectorAll(".color-option")
+        : [];
 
       let selectedCard = null;
+      let pendingWildCard = null;
 
-      // Click a card in your hand
-      hand.addEventListener("click", (event) => {
-        // select and pop out
-        const card = event.target.closest(".uno-card.player-card");
+      // Helper: play any card to discard
+      function playCardToDiscard(card) {
         if (!card) return;
-
-        // Clear previous selection
-        document
-          .querySelectorAll(".uno-card.player-card.selected")
-          .forEach((c) => c.classList.remove("selected"));
-
-        if (selectedCard === card) {
-          card.classList.remove("selected");
-          selectedCard = null;
-        } else {
-          card.classList.add("selected");
-          selectedCard = card;
-        }
-      });
-
-      // Play Card moves selected card to discard pile and set it there
-      playButton.addEventListener("click", (event) => {
-        event.preventDefault();
-
-        if (!selectedCard) {
-          console.log("[game-animations] no card selected");
-          return;
-        }
         if (!discardCard) {
           console.warn("[game-animations] #discardCard not found");
           return;
         }
 
-        const cardWrapper = selectedCard.closest(".player-card-wrapper");
+        const cardWrapper = card.closest(".player-card-wrapper");
 
         // Get positions for the animation
-        const startRect = selectedCard.getBoundingClientRect();
+        const startRect = card.getBoundingClientRect();
         const endRect = discardCard.getBoundingClientRect();
 
         const startCenterX = startRect.left + startRect.width / 2;
@@ -226,8 +225,8 @@
         const deltaX = endCenterX - startCenterX;
         const deltaY = endCenterY - startCenterY;
 
-        // Create a clone
-        const flying = selectedCard.cloneNode(true);
+        // Create clone
+        const flying = card.cloneNode(true);
         flying.classList.remove("selected");
         flying.classList.add("flying-card");
 
@@ -254,13 +253,13 @@
           () => {
             flying.remove();
 
-            // Copy the number
-            discardCard.textContent = selectedCard.textContent;
+            // Copy the number/symbol
+            discardCard.textContent = card.textContent;
 
             // Copy the color
             const baseClasses = ["uno-card"];
             const colorClasses = ["card-red", "card-blue", "card-green", "card-yellow", "card-wild"];
-            const selectedClasses = selectedCard.className.split(" ");
+            const selectedClasses = card.className.split(" ");
 
             const newClasses = [...baseClasses];
 
@@ -272,6 +271,15 @@
 
             discardCard.className = newClasses.join(" ");
 
+            // Check if this card is a reverse card
+            const isReverseCard = card.textContent && card.textContent.includes("⟲");
+
+            if (isReverseCard) {
+              isClockwise = !isClockwise;
+              updateDirectionUI();
+            }
+
+
             // Remove card from hand
             if (cardWrapper) {
               cardWrapper.remove();
@@ -281,8 +289,76 @@
           },
           { once: true }
         );
+      }
+
+      // Click card to select / pop out
+      hand.addEventListener("click", (event) => {
+        const card = event.target.closest(".uno-card.player-card");
+        if (!card) return;
+
+        // Clear previous selection
+        document
+          .querySelectorAll(".uno-card.player-card.selected")
+          .forEach((c) => c.classList.remove("selected"));
+
+        if (selectedCard === card) {
+          card.classList.remove("selected");
+          selectedCard = null;
+        } else {
+          card.classList.add("selected");
+          selectedCard = card;
+        }
       });
 
+      // Play Card button
+      playButton.addEventListener("click", (event) => {
+        event.preventDefault();
+
+        if (!selectedCard) {
+          console.log("[game-animations] no card selected");
+          return;
+        }
+
+        const isWild = selectedCard.classList.contains("card-wild");
+
+        // Wild card will open color picker
+        if (isWild && colorOverlay) {
+          pendingWildCard = selectedCard;
+          colorOverlay.classList.add("active");
+          return;
+        }
+
+        // Normal card will be play immediately
+        playCardToDiscard(selectedCard);
+      });
+
+      // Handle color choice for wild card
+      colorOptions.forEach((option) => {
+        option.addEventListener("click", () => {
+          if (!pendingWildCard) return;
+
+          let colorClass = "card-red";
+
+          if (option.classList.contains("red")) colorClass = "card-red";
+          else if (option.classList.contains("blue")) colorClass = "card-blue";
+          else if (option.classList.contains("green")) colorClass = "card-green";
+          else if (option.classList.contains("yellow")) colorClass = "card-yellow";
+
+          // Turn wild into chosen color before playing
+          pendingWildCard.classList.remove("card-wild");
+          pendingWildCard.classList.remove("card-red", "card-blue", "card-green", "card-yellow");
+          pendingWildCard.classList.add(colorClass);
+
+          colorOverlay.classList.remove("active");
+
+          // Now play it to discard like a normal card
+          playCardToDiscard(pendingWildCard);
+
+          pendingWildCard = null;
+        });
+      });
+
+      // Draw card from pile
       if (drawPile) {
         drawPile.addEventListener("click", () => {
           if (!hand) return;
@@ -300,7 +376,7 @@
           const deltaX = endX - startX;
           const deltaY = endY - startY;
 
-          // Randomly draw card)
+          // Randomly draw card
           const colors = ["card-red", "card-blue", "card-green", "card-yellow"];
           const values = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+2", "⟲"];
 
@@ -324,7 +400,7 @@
 
           document.body.appendChild(flying);
 
-          // 5) Animate into hand
+          // Animate into hand
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               flying.style.transform =
@@ -356,10 +432,6 @@
     });
 
   </script>
-</body>
-
-</html>
-
 </body>
 
 </html>

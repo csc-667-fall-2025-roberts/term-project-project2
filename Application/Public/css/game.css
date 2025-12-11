@@ -145,6 +145,16 @@ body {
   align-items: center;
   gap: 0.5rem;
 }
+.direction-arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+/* when reversed, flip it horizontally */
+.direction-arrow.reverse {
+  transform: scaleX(-1);
+}
+
 
 /* Piles */
 .pile-container {
