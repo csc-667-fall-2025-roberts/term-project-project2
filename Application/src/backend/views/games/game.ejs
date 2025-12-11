@@ -167,6 +167,8 @@
   </div>
 
   <script>
+    // All of this has to be moved onto a seperate js file. 
+    // need guidance on location!!
 
     document.addEventListener("DOMContentLoaded", () => {
       console.log("[game-animations] inline script loaded");
@@ -280,6 +282,77 @@
           { once: true }
         );
       });
+
+      if (drawPile) {
+        drawPile.addEventListener("click", () => {
+          if (!hand) return;
+
+          // Determine start position (draw pile)
+          const drawRect = drawPile.getBoundingClientRect();
+          const startX = drawRect.left + drawRect.width / 2;
+          const startY = drawRect.top + drawRect.height / 2;
+
+          // Determine end position (hand area)
+          const handRect = hand.getBoundingClientRect();
+          const endX = handRect.left + handRect.width / 2;
+          const endY = handRect.top + handRect.height / 2;
+
+          const deltaX = endX - startX;
+          const deltaY = endY - startY;
+
+          // Randomly draw card)
+          const colors = ["card-red", "card-blue", "card-green", "card-yellow"];
+          const values = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+2", "⟲"];
+
+          const colorClass = colors[Math.floor(Math.random() * colors.length)];
+          const value = values[Math.floor(Math.random() * values.length)];
+
+          // Create clone at draw pile position
+          const flying = document.createElement("div");
+          flying.className = "uno-card player-card " + colorClass + " flying-card";
+          flying.textContent = value;
+
+          const cardWidth = 64;
+          const cardHeight = 96;
+
+          flying.style.left = startX - cardWidth / 2 + "px";
+          flying.style.top = startY - cardHeight / 2 + "px";
+          flying.style.width = cardWidth + "px";
+          flying.style.height = cardHeight + "px";
+          flying.style.transform = "translate(0, 0) scale(0.6)";
+          flying.style.opacity = "0";
+
+          document.body.appendChild(flying);
+
+          // 5) Animate into hand
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              flying.style.transform =
+                "translate(" + deltaX + "px, " + deltaY + "px) scale(1)";
+              flying.style.opacity = "1";
+            });
+          });
+
+          flying.addEventListener(
+            "transitionend",
+            () => {
+              flying.remove();
+
+              // Add the card into the hand
+              const wrapper = document.createElement("div");
+              wrapper.className = "player-card-wrapper";
+
+              const card = document.createElement("div");
+              card.className = "uno-card player-card clickable " + colorClass;
+              card.textContent = value;
+
+              wrapper.appendChild(card);
+              hand.appendChild(wrapper);
+            },
+            { once: true }
+          );
+        });
+      }
     });
 
   </script>
