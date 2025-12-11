@@ -5,10 +5,16 @@ import { appendGame, loadGames, renderGames } from "./lobby/load-games";
 
 const socket = socketIo();
 
-socket.on(EVENTS.GAME_LISTING, (games: Game[]) => {
-  console.log(EVENTS.GAME_LISTING, games);
+socket.on(EVENTS.GAME_LISTING, (data: { myGames: Game[], availableGames: Game[] } | Game[]) => {
+  console.log(EVENTS.GAME_LISTING, data);
 
-  renderGames(games);
+  // Handle both old array format and new object format
+  if (Array.isArray(data)) {
+    renderGames(data);
+  } else {
+    // Combine myGames and availableGames, or just show availableGames
+    renderGames([...data.myGames, ...data.availableGames]);
+  }
 });
 
 socket.on(EVENTS.GAME_CREATE, (game: Game) => {
