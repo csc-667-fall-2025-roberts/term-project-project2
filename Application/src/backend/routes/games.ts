@@ -239,5 +239,12 @@ router.post("/:game_id/end-turn", async (request, response) => {
   }
 });
 
+router.post("/:game_id/player_hand", async (request, response) => {
+  const gameId = parseInt(request.params.game_id);
+  const { id: userId } = request.session.user!;
+  const card_data = await Cards.getHand(gameId, userId);
+  const myCards = card_data.map((c) => ({ id: c.id, color: c.color, value: c.value}));
+  response.status(200).json({ hand: myCards });
+});
 
 export default router;

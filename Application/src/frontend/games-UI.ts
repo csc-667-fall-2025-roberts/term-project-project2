@@ -10,13 +10,13 @@ import type { DisplayGameCard, User  } from "../types/types";
 export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
     const playerHandDiv = document.getElementById(`playerCards`);
     if (!playerHandDiv) {
-        console.error(`Player hand div not found`);
+        console.error(` div not found`);
         return;
     }
 
     const templete = playerHandDiv.querySelector('.player-card-wrapper');
     if (!templete) {
-        console.error(`Player card template not found`);
+        console.error(`Player card  not found`);
         return;
     }
 
@@ -33,14 +33,14 @@ export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
 
             cards.setAttribute('data-card-id', card.id.toString());
 
-
+ 
         }
 
         playerHandDiv.appendChild(clone);
       
     });
 
-    const cardCountSpan = document.getElementById('playercCardCount');
+    const cardCountSpan = document.getElementById('playerCardCount');
     if (cardCountSpan) {
         cardCountSpan.textContent = cards.length.toString();
     }
@@ -48,30 +48,26 @@ export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
 
 
 export const renderDiscardPile = async (cards : DisplayGameCard[]) => {
-    const discardPileDiv = document.getElementById('game-discard');
+    const discardPileDiv = document.getElementById('discardCard');
     if (!discardPileDiv) {
-        console.error('Discard pile div not found');
+        console.error('Discarddiv not found');
         return;
     }
-    discardPileDiv.innerHTML = '';
     if (cards.length === 0) {
         console.error('No cards in discard pile');
         return;
     }
     const topCard = cards[cards.length - 1];
-    const cardDiv = document.createElement('div');
-    cardDiv.className = `uno-card ${topCard.color}`;
-    cardDiv.textContent = topCard.value;
-    cardDiv.setAttribute('data-card-id', topCard.id.toString());
-    discardPileDiv.appendChild(cardDiv);
-
+    discardPileDiv.className = `uno-card card-${topCard.color}`;
+    discardPileDiv.textContent = topCard.value;
+    discardPileDiv.setAttribute('data-card-id', topCard.id.toString());
 };
 
 
 export const renderOtherPlayers = async(players: User[], playerHands: Record<number, number>, currentUserId: string, currentPlayerId: number) => {
-    const otherPlayersDiv = document.getElementById('other-players');
+    const otherPlayersDiv = document.getElementById('opponentsArea');
     if (!otherPlayersDiv) {
-        console.error('Other players div not found');
+        console.error('Opponentsdiv not found');
         return;
     }
 
@@ -82,27 +78,35 @@ export const renderOtherPlayers = async(players: User[], playerHands: Record<num
 
 
     otherPlayers.forEach(player => {
-        const playerDiv = document.createElement('div');
-        playerDiv.className = 'other-player';
-        playerDiv.innerHTML = `
-            <div class="player-avatar">
-                <div class="player-name">${player.username}</div>
-                <div class="player-card-count">Cards: ${playerHands[player.id] || 0}</div>
-                <div class="player-turn-indicator ${player.id === currentPlayerId ? 'active' : ''}"></div>
-                <div class="player-position">Position: ${player.id}</div>
+        const opponentDiv = document.createElement('div');
+        opponentDiv.className = 'opponent';
+        opponentDiv.setAttribute('data-player-id', player.id.toString());
+
+        const cardCount = playerHands[player.id] || 0;
+        const isActive = player.id === currentPlayerId;
+
+        opponentDiv.innerHTML = `
+            <div class="opponent-info ${isActive ? 'active-player' : ''}">
+                <div class="opponent-name">${player.username}</div>
+                <div class="opponent-card-count ${isActive ? 'active-turn' : ''}">${cardCount} cards</div>
+            </div>
+            <div class="opponent-hand">
+                ${Array(cardCount).fill('<div class="opponent-card"></div>').join('')}
             </div>
         `;
-        otherPlayersDiv.appendChild(playerDiv);
+        otherPlayersDiv.appendChild(opponentDiv);
     });
 };
 
 // the rest of methods that we will need4
 
 export const renderTopCard = async(card: DisplayGameCard) => {
+    
 };
 
 // Update the turn indicator text (#turnText) to show whose turn it is
 export const updateTurnSprite = async(currentPlayerId: number, playerName: string, isYourTurn: boolean) => {
+  
 
 };
 
@@ -136,10 +140,6 @@ export const showWinnerScreen = async(winnerName: string, winnerId: number) => {
 
 };
 
-// Display game over screen
-export const showGameOverScreen = async() => {
-
-};
 
 // Show toast notification for game events ("Skip!", "Reverse!", "Draw 2!", etc.)
 export const showGameNotification = async(message: string, type: 'info' | 'warning' | 'success' = 'info') => {
@@ -158,8 +158,12 @@ export const updateAllPlayerHandCounts = async(handCounts: Array<{ userId: numbe
         if (userId.toString() === currentUserId) {
             updateHandCount(cardCount);
         }
+
+
     });
 };
+
+
 
 
 

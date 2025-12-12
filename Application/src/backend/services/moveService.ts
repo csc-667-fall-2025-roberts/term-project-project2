@@ -113,7 +113,7 @@ export async function playACard(
 export async function drawCards(
   gameId: number,
   userId: number,
-  count: number = 1
+  count?: number
 ): Promise<{ success: boolean; cardIds: number[] }> {
 
   const game = await Games.get(gameId);
@@ -125,14 +125,25 @@ export async function drawCards(
   const { currentPlayerId } = await getCurrentTurn(gameId);
   if(currentPlayerId !== userId){
     throw new Error("Not your turn");
+
   }
 
+  const lastMove = await Moves.getLastMove(gameId);
+
+  const drawAmount = lastMove && (lastMove.draw_count && lastMove.owner_id === userId)
+    ? lastMove.draw_count : 0;
+
+  const drawCount = drawAmount > 0 ? drawAmount : (count || 1);
+
+
+
+
   const deckCount = await GameCards.getDeckCount(gameId);
-  if(deckCount < count){
+  if(deckCount < drawCount){
     throw new Error("Not enough cards in deck");
   }
 
-  const drawnCards = await GameCards.drawCards(gameId, userId, count);
+  const drawnCards = await GameCards.drawCards(gameId, userId, drawCount);
   const cardIds = drawnCards.map(card => card.id);
 
   return { success: true, cardIds };
