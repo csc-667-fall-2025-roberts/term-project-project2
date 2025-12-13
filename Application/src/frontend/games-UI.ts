@@ -21,6 +21,7 @@ export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
     }
 
     playerHandDiv.innerHTML = '';
+    playerHandDiv.appendChild(templete); // Keep template hidden
 
     cards.forEach(card => {
         const clone = templete.cloneNode(true) as HTMLElement;
@@ -37,7 +38,6 @@ export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
         }
 
         playerHandDiv.appendChild(clone);
-      
     });
 
     const cardCountSpan = document.getElementById('playerCardCount');

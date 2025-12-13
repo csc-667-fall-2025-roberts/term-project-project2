@@ -124,7 +124,7 @@ export async function drawCards(
 
   const { currentPlayerId } = await getCurrentTurn(gameId);
   if(currentPlayerId !== userId){
-    throw new Error("Not your turn");
+    throw new Error(" It is Not your turn");
 
   }
 
@@ -162,7 +162,7 @@ export async function endTurn(
 
   const { currentPlayerId } = await getCurrentTurn(gameId);
   if(currentPlayerId !== userId){
-    throw new Error("Not your turn");
+    throw new Error("It is Not your turn");
   }
 
   await Moves.createMove(gameId, userId, 'draw', undefined, undefined, undefined, false);

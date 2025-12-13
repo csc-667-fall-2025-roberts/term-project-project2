@@ -13,7 +13,7 @@ router.get("/:id", async (req, res, next) => {
     const { id: userId, username } = req.session.user!;
 
     const game = await Games.get(gameId);
-    logger.info("Readyup game data:", game);
+    logger.info("Readyup data:", game);
 
     if (!game) {
       return res.status(404).render("errors/404", { url: req.originalUrl });
@@ -60,12 +60,12 @@ router.get ( "/:game_id/players", async (request,response) => {
     const {id: userId} = request.session.user!;
     const isPlayerInGame = await Games.checkPlayerInGame(gameId, userId);
     if (!isPlayerInGame) {
-      return response.status(403).json({ error: "User not in game" });
+      return response.status(403).json({ error: "User isnot in game" });
     }
 
     response.json({ players, currentUserId: userId, capacity: game.capacity })
   } catch (error: any) {
-    logger.error("Error fetching readyup players:", error);
+    logger.error("could not get readyup players:", error);
     response.status(500).json({ error: error.message });
   }
 });

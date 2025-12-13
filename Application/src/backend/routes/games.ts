@@ -211,11 +211,11 @@ router.post("/:game_id/draw", async (request, response) => {
     broadcastHandUpdate(io, gameId, handCounts);
 
     response.status(200).json({
-      message: "Cards drawn successfully",
+      message: "Cards were drawn successfully",
       cardIds: result.cardIds
     });
   } catch (error: any) {
-    logger.error("Error drawing cards:", error);
+    logger.error("Error drawing your cards:", error);
     response.status(500).json({ error: error.message });
   }
 });
@@ -232,14 +232,14 @@ router.post("/:game_id/end-turn", async (request, response) => {
     const turnInfo = await getCurrentTurn(gameId);
     broadcastTurnChange(io, gameId, turnInfo.currentPlayerId, turnInfo.direction, turnInfo.playerOrder);
 
-    response.status(200).json({ message: "Turn ended successfully" });
+    response.status(200).json({ message: "Turn ended" });
   } catch (error: any) {
     logger.error("Error ending turn:", error);
     response.status(500).json({ error: error.message });
   }
 });
 
-router.post("/:game_id/player_hand", async (request, response) => {
+router.get("/:game_id/player_hand", async (request, response) => {
   const gameId = parseInt(request.params.game_id);
   const { id: userId } = request.session.user!;
   const card_data = await Cards.getHand(gameId, userId);
