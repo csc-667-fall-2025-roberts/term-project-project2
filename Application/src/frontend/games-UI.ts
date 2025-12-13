@@ -4,37 +4,44 @@ import type { DisplayGameCard, User  } from "../types/types";
 
 // we are going to need to make sure we use devs that are in our actual ejs file thes are mostly just placeholders for now im not rlly checking
 
-
+// Helper function to convert card values to display symbols
+const getCardDisplayValue = (value: string): string => {
+    const valueMap: Record<string, string> = {
+        'skip': '⊘',
+        'reverse': '⟲',
+        'draw_two': '+2',
+        'wild': '★',
+        'wild_draw_four': '+4'
+    };
+    return valueMap[value] || value;
+};
 
 // also animations will also be added here
 export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
     const playerHandDiv = document.getElementById(`playerCards`);
     if (!playerHandDiv) {
-        console.error(` div not found`);
+        console.error('playerCards div not found');
         return;
     }
 
     const templete = playerHandDiv.querySelector('.player-card-wrapper');
     if (!templete) {
-        console.error(`Player card  not found`);
+        console.error('Player card template not found');
         return;
     }
 
     playerHandDiv.innerHTML = '';
     playerHandDiv.appendChild(templete); // Keep template hidden
 
-    cards.forEach(card => {
+    cards.forEach((card) => {
         const clone = templete.cloneNode(true) as HTMLElement;
-        const cards = clone.querySelector('.uno-card');
+        clone.style.display = 'block'; // Make the cloned wrapper visible
+        const cardElement = clone.querySelector('.uno-card');
 
-        if (cards) {
-            cards.className = `uno-card ${card.color} clickable`;
-
-            cards.textContent = card.value;
-
-            cards.setAttribute('data-card-id', card.id.toString());
-
- 
+        if (cardElement) {
+            cardElement.className = `uno-card player-card card-${card.color} clickable`;
+            cardElement.textContent = getCardDisplayValue(card.value);
+            cardElement.setAttribute('data-card-id', card.id.toString());
         }
 
         playerHandDiv.appendChild(clone);
@@ -59,7 +66,7 @@ export const renderDiscardPile = async (cards : DisplayGameCard[]) => {
     }
     const topCard = cards[cards.length - 1];
     discardPileDiv.className = `uno-card card-${topCard.color}`;
-    discardPileDiv.textContent = topCard.value;
+    discardPileDiv.textContent = getCardDisplayValue(topCard.value);
     discardPileDiv.setAttribute('data-card-id', topCard.id.toString());
 };
 
@@ -74,15 +81,16 @@ export const renderOtherPlayers = async(players: User[], playerHands: Record<num
     otherPlayersDiv.innerHTML = '';
 
     // filter current player
-    const otherPlayers = players.filter(player => player.id.toString() !== currentUserId);
-
+    const otherPlayers = players.filter(player => player.id?.toString() !== currentUserId);
 
     otherPlayers.forEach(player => {
+        if (!player.id) return; // Skip if player id is undefined
+
         const opponentDiv = document.createElement('div');
         opponentDiv.className = 'opponent';
         opponentDiv.setAttribute('data-player-id', player.id.toString());
 
-        const cardCount = playerHands[player.id] || 0;
+        const cardCount = parseInt(playerHands[player.id] as any) || 0;
         const isActive = player.id === currentPlayerId;
 
         opponentDiv.innerHTML = `
@@ -149,12 +157,14 @@ export const showGameNotification = async(message: string, type: 'info' | 'warni
 
 export const updateAllPlayerHandCounts = async(handCounts: Array<{ userId: number; cardCount: number }>, currentUserId: string) => {
     handCounts.forEach(({ userId, cardCount }) => {
+        if (!userId) return; // Skip if userId is undefined
+
         const playerCardCountElement = document.querySelector(`.other-player[data-player-id="${userId}"] .player-card-count`);
         if (playerCardCountElement) {
             playerCardCountElement.textContent = `Cards: ${cardCount}`;
         }
 
- 
+
         if (userId.toString() === currentUserId) {
             updateHandCount(cardCount);
         }
