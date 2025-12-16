@@ -23,6 +23,60 @@ body {
   padding-top: 10px 20px;
 }
 
+#gameover-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(47, 0, 0, 0.75);
+  display: none;              
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  /* no opacity here */
+}
+
+#gameover-overlay.active{
+  display: flex;
+}
+
+.gameover-modal{
+  background: rgb(255, 255, 255);
+  padding: 4rem 8rem; 
+  line-height: 1.5;
+  border-radius: 1.5rem;
+  text-align: center;
+  color: black;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+
+.gameover-closeBtn{
+  padding: 1rem 2rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #667eea 0%, #0b00db 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 17px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.gameover-closeBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+}
+
+#gameover-title{
+  color: rgb(255, 72, 0);
+  font-size: 70px;
+  font-weight: 900;
+}
+
+#gameover-message{
+  padding-bottom: 5rem;
+}
+
+
 .game-info {
   font-size: 13px;
   color: #666;
@@ -43,7 +97,7 @@ body {
 .back-btn {
   background: linear-gradient(135deg, #667eea 0%, #0b00db 100%);
   color: #ffffff;
-  padding: 5px 10px;
+  padding: 7px 14px;
   border-radius: 8px;
   text-decoration: none;
   font-weight: 600;
@@ -387,6 +441,48 @@ body {
   backface-visibility: hidden;
   transform-style: preserve-3d;
 }
+
+#notification-container {
+  position: fixed;
+  bottom: 40%;
+  left: 70%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 2000; /* above everything */
+}
+
+.notification {
+  padding: 12px 18px;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Themes */
+.notification.info {
+  background: rgba(59, 130, 246, 0.9); /* blue */
+}
+
+.notification.warning {
+  background: rgba(234, 179, 8, 0.9); /* yellow/gold */
+}
+
+.notification.success {
+  background: rgba(34, 197, 94, 0.9); /* green */
+}
+
+
 
 @media (max-width: 768px) {
 

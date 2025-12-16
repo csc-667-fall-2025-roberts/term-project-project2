@@ -1,53 +1,47 @@
+import { HtmlTagDescriptor } from "vite";
 import type { DisplayGameCard, User  } from "../types/types";
 
 
 
 // we are going to need to make sure we use devs that are in our actual ejs file thes are mostly just placeholders for now im not rlly checking
 
-// Helper function to convert card values to display symbols
-const getCardDisplayValue = (value: string): string => {
-    const valueMap: Record<string, string> = {
-        'skip': '⊘',
-        'reverse': '⟲',
-        'draw_two': '+2',
-        'wild': '★',
-        'wild_draw_four': '+4'
-    };
-    return valueMap[value] || value;
-};
+
 
 // also animations will also be added here
 export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
     const playerHandDiv = document.getElementById(`playerCards`);
     if (!playerHandDiv) {
-        console.error('playerCards div not found');
+        console.error(`Player hand div not found`);
         return;
     }
 
     const templete = playerHandDiv.querySelector('.player-card-wrapper');
     if (!templete) {
-        console.error('Player card template not found');
+        console.error(`Player card template not found`);
         return;
     }
 
     playerHandDiv.innerHTML = '';
-    playerHandDiv.appendChild(templete); // Keep template hidden
 
-    cards.forEach((card) => {
+    cards.forEach(card => {
         const clone = templete.cloneNode(true) as HTMLElement;
-        clone.style.display = 'block'; // Make the cloned wrapper visible
-        const cardElement = clone.querySelector('.uno-card');
+        const cards = clone.querySelector('.uno-card');
 
-        if (cardElement) {
-            cardElement.className = `uno-card player-card card-${card.color} clickable`;
-            cardElement.textContent = getCardDisplayValue(card.value);
-            cardElement.setAttribute('data-card-id', card.id.toString());
+        if (cards) {
+            cards.className = `uno-card ${card.color} clickable`;
+
+            cards.textContent = card.value;
+
+            cards.setAttribute('data-card-id', card.id.toString());
+
+
         }
 
         playerHandDiv.appendChild(clone);
+      
     });
 
-    const cardCountSpan = document.getElementById('playerCardCount');
+    const cardCountSpan = document.getElementById('playercCardCount');
     if (cardCountSpan) {
         cardCountSpan.textContent = cards.length.toString();
     }
@@ -55,66 +49,61 @@ export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
 
 
 export const renderDiscardPile = async (cards : DisplayGameCard[]) => {
-    const discardPileDiv = document.getElementById('discardCard');
+    const discardPileDiv = document.getElementById('game-discard');
     if (!discardPileDiv) {
-        console.error('Discarddiv not found');
+        console.error('Discard pile div not found');
         return;
     }
+    discardPileDiv.innerHTML = '';
     if (cards.length === 0) {
         console.error('No cards in discard pile');
         return;
     }
     const topCard = cards[cards.length - 1];
-    discardPileDiv.className = `uno-card card-${topCard.color}`;
-    discardPileDiv.textContent = getCardDisplayValue(topCard.value);
-    discardPileDiv.setAttribute('data-card-id', topCard.id.toString());
+    const cardDiv = document.createElement('div');
+    cardDiv.className = `uno-card ${topCard.color}`;
+    cardDiv.textContent = topCard.value;
+    cardDiv.setAttribute('data-card-id', topCard.id.toString());
+    discardPileDiv.appendChild(cardDiv);
+
 };
 
 
 export const renderOtherPlayers = async(players: User[], playerHands: Record<number, number>, currentUserId: string, currentPlayerId: number) => {
-    const otherPlayersDiv = document.getElementById('opponentsArea');
+    const otherPlayersDiv = document.getElementById('other-players');
     if (!otherPlayersDiv) {
-        console.error('Opponentsdiv not found');
+        console.error('Other players div not found');
         return;
     }
 
     otherPlayersDiv.innerHTML = '';
 
     // filter current player
-    const otherPlayers = players.filter(player => player.id?.toString() !== currentUserId);
+    const otherPlayers = players.filter(player => player.id.toString() !== currentUserId);
+
 
     otherPlayers.forEach(player => {
-        if (!player.id) return; // Skip if player id is undefined
-
-        const opponentDiv = document.createElement('div');
-        opponentDiv.className = 'opponent';
-        opponentDiv.setAttribute('data-player-id', player.id.toString());
-
-        const cardCount = parseInt(playerHands[player.id] as any) || 0;
-        const isActive = player.id === currentPlayerId;
-
-        opponentDiv.innerHTML = `
-            <div class="opponent-info ${isActive ? 'active-player' : ''}">
-                <div class="opponent-name">${player.username}</div>
-                <div class="opponent-card-count ${isActive ? 'active-turn' : ''}">${cardCount} cards</div>
-            </div>
-            <div class="opponent-hand">
-                ${Array(cardCount).fill('<div class="opponent-card"></div>').join('')}
+        const playerDiv = document.createElement('div');
+        playerDiv.className = 'other-player';
+        playerDiv.innerHTML = `
+            <div class="player-avatar">
+                <div class="player-name">${player.username}</div>
+                <div class="player-card-count">Cards: ${playerHands[player.id] || 0}</div>
+                <div class="player-turn-indicator ${player.id === currentPlayerId ? 'active' : ''}"></div>
+                <div class="player-position">Position: ${player.id}</div>
             </div>
         `;
-        otherPlayersDiv.appendChild(opponentDiv);
+        otherPlayersDiv.appendChild(playerDiv);
     });
 };
 
 // the rest of methods that we will need4
 
 export const renderTopCard = async(card: DisplayGameCard) => {
-    
 };
 
 // Update the turn indicator text (#turnText) to show whose turn it is
 export const updateTurnSprite = async(currentPlayerId: number, playerName: string, isYourTurn: boolean) => {
-  
 
 };
 
@@ -134,46 +123,183 @@ export const updateDrawPile = async(count: number) => {
 };
 
 // Show the color picker modal (#colorPickerOverlay) for Wild cards
-export const showColorSelectionUI = async() => {
+export const showColorSelectionUI = (): Promise<string> => {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById("colorPickerOverlay");
+        if (!overlay) {
+            console.error("Color picker overlay not found");
+            // default picks red so the Promise resolves
+            resolve("red");
+            return;
+        }
 
+        // showing the overlay
+        overlay.classList.add("active");
+
+        // get all color options elements
+        const options = overlay.querySelectorAll<HTMLDivElement>(".color-option");
+
+        const clickHandler = (event: Event) => {
+            const target = event.currentTarget as HTMLDivElement;
+
+            let chosenColor: string | null = null;
+            if (target.classList.contains("red"))    chosenColor = "red";
+            else if (target.classList.contains("blue"))   chosenColor = "blue";
+            else if (target.classList.contains("yellow")) chosenColor = "yellow";
+            else if (target.classList.contains("green"))  chosenColor = "green";
+
+            if (!chosenColor) {
+                return;
+            }
+
+            // clean up listeners so they don't stack
+            options.forEach(option =>
+                option.removeEventListener("click", clickHandler)
+            );
+
+            // hide overlay
+            overlay.classList.remove("active");
+
+            // resolve the Promise with the color string
+            resolve(chosenColor);
+        };
+
+        options.forEach(option =>
+            option.addEventListener("click", clickHandler)
+        );
+    });
 };
 
-// Hide the color picker modal (#colorPickerOverlay)
+// if we need to close the color picker modal manually
 export const hideColorSelectionUI = async() => {
+    const overlay = document.getElementById("colorPickerOverlay");
+    if(overlay){
+        overlay.classList.remove("active");
+    }
 
 };
 
 // Display winner screen when game ends
 export const showWinnerScreen = async(winnerName: string, winnerId: number) => {
+    console.log("showWinnerScreen fired!", { winnerName, winnerId }); 
 
+    const overlay = document.getElementById("gameover-overlay");
+    if(!overlay){
+        console.error("gameover overlay not found");
+        return;
+    }
+
+    const titleEl = overlay.querySelector<HTMLElement>("#gameover-title");
+    const messageEl = overlay.querySelector<HTMLElement>("#gameover-message");
+    const closeBtn = overlay.querySelector<HTMLButtonElement>("#gameover-closeBtn");
+
+    // determine if the current user is the winner
+    const currentUserIdStr = document.body.dataset.userId;
+    const isYou = currentUserIdStr && parseInt(currentUserIdStr, 10) === winnerId;
+
+    if (titleEl){
+        titleEl.textContent = isYou ? "YOU WIN!" : "GAME OVER!";
+    }
+
+    if (messageEl){
+        messageEl.textContent = isYou
+        ? "Congratulations, you won the game!"
+        : `${winnerName} has won the game.`;
+    }
+
+    // show the overlay
+    overlay.classList.add("active");
+
+    if(closeBtn){
+        closeBtn.onclick = () => {
+            // hide overlay
+            overlay.classList.remove("active");
+            // redirect to lobby
+            window.location.href = "/lobby";
+        };
+    }
 };
 
+
+// Display game over screen
+export const showGameOverScreen = async() => {
+
+};
 
 // Show toast notification for game events ("Skip!", "Reverse!", "Draw 2!", etc.)
 export const showGameNotification = async(message: string, type: 'info' | 'warning' | 'success' = 'info') => {
+    const container = document.getElementById("notification-container");
+    if (!container) {
+        console.error("Notification container not found");
+        return;
+    }
+
+    // create the notification element
+    const notif = document.createElement("div");
+    notif.className = `notification ${type}`;
+    notif.textContent = message;
+
+    container.appendChild(notif);
+
+    // trigger the fade-in animation
+    requestAnimationFrame(() => {
+        notif.classList.add("show");
+    });
+
+    // remove after 3 seconds
+    setTimeout(() => {
+        notif.classList.remove("show");
+
+        // fade-out before removing
+        setTimeout(() => {
+            notif.remove();
+        }, 300);
+
+    }, 3000);
 
 };
 
+// TEMP: expose helpers to the browser console for manual testing -- DELETE LATER -----------
+declare global {
+    interface Window {
+      debugShowWinnerScreen?: (winnerName: string, winnerId: number) => void;
+      debugNotify?: (message: string, type?: "info" | "warning" | "success") => void;
+    }
+  }
+  
+  if (typeof window !== "undefined") {
+    window.debugShowWinnerScreen = showWinnerScreen;
+    window.debugNotify = showGameNotification;
+  }
+  
+  export {}; // keep this so the file is treated as a module
+
+  declare global {
+    interface Window {
+      debugColorPicker?: () => Promise<string>;
+    }
+  }
+  
+  if (typeof window !== "undefined") {
+    window.debugColorPicker = showColorSelectionUI;
+  }
+  
+  
+// ------------------------------------------------------------------------------------------
 
 export const updateAllPlayerHandCounts = async(handCounts: Array<{ userId: number; cardCount: number }>, currentUserId: string) => {
     handCounts.forEach(({ userId, cardCount }) => {
-        if (!userId) return; // Skip if userId is undefined
-
         const playerCardCountElement = document.querySelector(`.other-player[data-player-id="${userId}"] .player-card-count`);
         if (playerCardCountElement) {
             playerCardCountElement.textContent = `Cards: ${cardCount}`;
         }
 
-
+ 
         if (userId.toString() === currentUserId) {
             updateHandCount(cardCount);
         }
-
-
     });
 };
-
-
 
 
 

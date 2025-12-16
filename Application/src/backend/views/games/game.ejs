@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/css/game.css" />
+  <script type="module" src="/js/game.js"></script>
+
   <title>Game <%= id %>
   </title>
 </head>
@@ -23,6 +25,7 @@
       <a href="/lobby" class="back-btn">Leave Game</a>
     </div>
   </div>
+
 
   <!-- Game Container -->
   <div class="game-container">
@@ -105,15 +108,19 @@
             <div class="discard-pile-shadow"></div>
             <div id="discardCard" class="uno-card card-red">7</div>
           </div>
+          <!-- Notification-->
+          <div id="notification-container"></div>
         </div>
         <div class="pile-label">Discard</div>
       </div>
     </div>
 
+
     <!-- Turn Indicator -->
     <div class="turn-indicator">
       <div id="turnText" class="turn-text your-turn"> Your Turn</div>
     </div>
+
 
     <!-- Player Hand -->
     <div class="player-hand-container">
@@ -166,6 +173,17 @@
     </div>
   </div>
 
+  <!-- Winner/Game over screen-->
+  <div class="gameover-overlay" id="gameover-overlay">
+    <div class="gameover-modal">
+      <h2 id="gameover-title">Game over!</h2>
+      <p id="gameover-message"> Player X has won the game.</p>
+      <button id="gameover-closeBtn" class="gameover-closeBtn">Exit game</button>
+    </div>
+  </div>
+  
+
+  
   <script>
     // All of this has to be moved onto a separate js file. 
     // need guidance on location!!
@@ -194,6 +212,7 @@
         }
       }
 
+      /*
       // Color picker 
       const colorOverlay = document.getElementById("colorPickerOverlay");
       const colorOptions = colorOverlay
@@ -202,6 +221,7 @@
 
       let selectedCard = null;
       let pendingWildCard = null;
+      */
 
       // Helper: play any card to discard
       function playCardToDiscard(card) {
@@ -332,6 +352,7 @@
         playCardToDiscard(selectedCard);
       });
 
+      /*
       // Handle color choice for wild card
       colorOptions.forEach((option) => {
         option.addEventListener("click", () => {
@@ -357,6 +378,8 @@
           pendingWildCard = null;
         });
       });
+      */
+      
 
       // Draw card from pile
       if (drawPile) {
@@ -432,6 +455,7 @@
     });
 
   </script>
+
 </body>
 
 </html>

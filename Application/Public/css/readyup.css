@@ -239,6 +239,7 @@ body {
   100% { transform: scale(1); }
 }
 
+/*
 .waiting-dots {
   font-size: 1.5rem;
   color: #9ca3af;
@@ -249,6 +250,7 @@ body {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 1; }
 }
+*/
 
 /* READY SUMMARY */
 .ready-summary {
