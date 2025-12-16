@@ -5,7 +5,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/css/game.css" />
-  <script type="module" src="/js/game.js"></script>
 
   <title>Game <%= id %>
   </title>
@@ -180,6 +179,27 @@
       <p id="gameover-message"> Player X has won the game.</p>
       <button id="gameover-closeBtn" class="gameover-closeBtn">Exit game</button>
     </div>
+  </div>
+
+  <!-- In-game Chat Toggle Button -->
+  <button id="gameChatToggle" class="game-chat-toggle">
+    Chat
+  </button>
+  <!-- In-game Chat Popup -->
+  <div id="gameChatWindow" class="game-chat-window hidden">
+    <div class="game-chat-header">
+      <span>Game Chat</span>
+      <button id="gameChatClose" class="chat-close-btn">✕</button>
+    </div>
+
+    <div id="gameChatMessages" class="game-chat-messages">
+      <!-- messages will be appended here -->
+    </div>
+
+    <form id="gameChatForm" class="game-chat-form">
+      <input id="gameChatInput" type="text" placeholder="Type a message..." autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
   </div>
 
   <script>
@@ -377,7 +397,7 @@
         });
       });
       */
-      
+
 
       // Draw card from pile
       if (drawPile) {
