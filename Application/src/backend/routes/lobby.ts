@@ -21,7 +21,7 @@ router.post("/update-display-name", async (request, response) => {
     
     response.status(200).json({ success: true });
   } catch (error) {
-    console.error("Error updating display name:", error);
+    console.error("cannot update display name:", error);
     response.status(500).json({ success: false });
   }
 });

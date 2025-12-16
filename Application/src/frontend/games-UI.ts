@@ -1,3 +1,4 @@
+import { HtmlTagDescriptor } from "vite";
 import type { DisplayGameCard, User  } from "../types/types";
 
 
@@ -203,19 +204,103 @@ export const updateDrawPile = async(count: number) => {
 };
 
 // Show the color picker modal (#colorPickerOverlay) for Wild cards
-export const showColorSelectionUI = async() => {
+export const showColorSelectionUI = (): Promise<string> => {
+    return new Promise((resolve) => {
+        const overlay = document.getElementById("colorPickerOverlay");
+        if (!overlay) {
+            console.error("Color picker overlay not found");
+            // default picks red so the Promise resolves
+            resolve("red");
+            return;
+        }
 
+        // showing the overlay
+        overlay.classList.add("active");
+
+        // get all color options elements
+        const options = overlay.querySelectorAll<HTMLDivElement>(".color-option");
+
+        const clickHandler = (event: Event) => {
+            const target = event.currentTarget as HTMLDivElement;
+
+            let chosenColor: string | null = null;
+            if (target.classList.contains("red"))    chosenColor = "red";
+            else if (target.classList.contains("blue"))   chosenColor = "blue";
+            else if (target.classList.contains("yellow")) chosenColor = "yellow";
+            else if (target.classList.contains("green"))  chosenColor = "green";
+
+            if (!chosenColor) {
+                return;
+            }
+
+            // clean up listeners so they don't stack
+            options.forEach(option =>
+                option.removeEventListener("click", clickHandler)
+            );
+
+            // hide overlay
+            overlay.classList.remove("active");
+
+            // resolve the Promise with the color string
+            resolve(chosenColor);
+        };
+
+        options.forEach(option =>
+            option.addEventListener("click", clickHandler)
+        );
+    });
 };
 
-// Hide the color picker modal (#colorPickerOverlay)
+// if we need to close the color picker modal manually
 export const hideColorSelectionUI = async() => {
+    const overlay = document.getElementById("colorPickerOverlay");
+    if(overlay){
+        overlay.classList.remove("active");
+    }
 
 };
 
 // Display winner screen when game ends
 export const showWinnerScreen = async(winnerName: string, winnerId: number) => {
+    console.log("showWinnerScreen fired!", { winnerName, winnerId }); 
 
+    const overlay = document.getElementById("gameover-overlay");
+    if(!overlay){
+        console.error("gameover overlay not found");
+        return;
+    }
+
+    const titleEl = overlay.querySelector<HTMLElement>("#gameover-title");
+    const messageEl = overlay.querySelector<HTMLElement>("#gameover-message");
+    const closeBtn = overlay.querySelector<HTMLButtonElement>("#gameover-closeBtn");
+
+    // determine if the current user is the winner
+    const currentUserIdStr = document.body.dataset.userId;
+    const isYou = currentUserIdStr && parseInt(currentUserIdStr, 10) === winnerId;
+
+    if (titleEl){
+        titleEl.textContent = isYou ? "YOU WIN!" : "GAME OVER!";
+    }
+
+    if (messageEl){
+        messageEl.textContent = isYou
+        ? "Congratulations, you won the game!"
+        : `${winnerName} has won the game.`;
+    }
+
+    // show the overlay
+    overlay.classList.add("active");
+
+    if(closeBtn){
+        closeBtn.onclick = () => {
+            // hide overlay
+            overlay.classList.remove("active");
+            // redirect to lobby
+            window.location.href = "/lobby";
+        };
+    }
 };
+
 
 // Display game over screen
 export const showGameOverScreen = async() => {
@@ -224,9 +309,64 @@ export const showGameOverScreen = async() => {
 
 // Show toast notification for game events ("Skip!", "Reverse!", "Draw 2!", etc.)
 export const showGameNotification = async(message: string, type: 'info' | 'warning' | 'success' = 'info') => {
+    const container = document.getElementById("notification-container");
+    if (!container) {
+        console.error("Notification container not found");
+        return;
+    }
+
+    // create the notification element
+    const notif = document.createElement("div");
+    notif.className = `notification ${type}`;
+    notif.textContent = message;
+
+    container.appendChild(notif);
+
+    // trigger the fade-in animation
+    requestAnimationFrame(() => {
+        notif.classList.add("show");
+    });
+
+    // remove after 3 seconds
+    setTimeout(() => {
+        notif.classList.remove("show");
+
+        // fade-out before removing
+        setTimeout(() => {
+            notif.remove();
+        }, 300);
+
+    }, 3000);
 
 };
 
+// TEMP: expose helpers to the browser console for manual testing -- DELETE LATER -----------
+declare global {
+    interface Window {
+      debugShowWinnerScreen?: (winnerName: string, winnerId: number) => void;
+      debugNotify?: (message: string, type?: "info" | "warning" | "success") => void;
+    }
+  }
+  
+  if (typeof window !== "undefined") {
+    window.debugShowWinnerScreen = showWinnerScreen;
+    window.debugNotify = showGameNotification;
+  }
+  
+  export {}; // keep this so the file is treated as a module
+
+  declare global {
+    interface Window {
+      debugColorPicker?: () => Promise<string>;
+    }
+  }
+  
+  if (typeof window !== "undefined") {
+    window.debugColorPicker = showColorSelectionUI;
+  }
+  
+  
+// ------------------------------------------------------------------------------------------
 
 export const updateAllPlayerHandCounts = async(handCounts: Array<{ userId: number; cardCount: number }>, currentUserId: string) => {
     handCounts.forEach(({ userId, cardCount }) => {

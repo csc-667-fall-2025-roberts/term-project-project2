@@ -25,7 +25,6 @@ import {
     showColorSelectionUI,
     hideColorSelectionUI,
     showWinnerScreen,
-    showGameOverScreen,
     showGameNotification,
     updateAllPlayerHandCounts
 } from './games-UI';
@@ -49,55 +48,15 @@ let topDiscardCard: DisplayGameCard | null = null;
 
 // Socket Event Listeners
 
-socket.on(GAME_STATE_UPDATE, (gameState: {
-    playerHands: Record<number, DisplayGameCard[]>;
-    currentPlayer: number;
-    players: User[];
-    topDiscardCard: DisplayGameCard[];
-}) => {
-    console.log("Received game state update:", gameState);
-
-
-    players = gameState.players;
-    currentPlayerId = gameState.currentPlayer;
-    myTurn = currentPlayerId === parseInt(currentUserId);
-
-    // get the top discard card and render it into the "game-discard" div
-    const discardDiv = document.getElementById("game-discard");
-
-    if (discardDiv) {
-        topDiscardCard = gameState.topDiscardCard[gameState.topDiscardCard.length - 1];
-        discardDiv.innerHTML = `
-            <div class="playing-card" data-card-id="${topDiscardCard.id}">
-                <div class="card-color">${topDiscardCard.color}</div>
-                <div class="card-value">${topDiscardCard.value}</div>
-            </div>
-        `;
-
-    } else {
-        console.error("Discard div not found");
-    }
-
-    // get the count of player cards and render the correct number of "playing-card-back" divs
-    gameState.players.forEach(player => {
-        const playerHandDiv = document.getElementById(`player-hand-${player.id}`);
-        if (playerHandDiv) {
-            const hand = gameState.playerHands[player.id] || [];
-            playerHandDiv.innerHTML = hand.map(() => `<div class="playing-card-back"></div>`).join("");
-        } else {
-            console.error(`Player hand div not found for player ID ${player.id}`);
-        }
-    });
+socket.on(GAME_STATE_UPDATE, (data: { gameId: number; state: string }) => {
+    console.log("Game state updated:", data);
+  
 });
 
 
-
-
-
-
-socket.on(TURN_CHANGE, (turnData: { currentPlayer: number, turnDirection: number, player_order: number, gameId: number }) => {
-    console.log("Turn change:", turnData);
-    currentPlayerId = turnData.currentPlayer;
+socket.on(TURN_CHANGE, (turnData: { currentPlayerId: number, turnDirection: number, player_order: number, gameId: number }) => {
+    console.log("Turn changed:", turnData);
+    currentPlayerId = turnData.currentPlayerId;
     isClockwise = turnData.turnDirection === 1;
     myTurn = currentPlayerId === parseInt(currentUserId);
 
@@ -130,35 +89,87 @@ socket.on( PLAYER_HAND_UPDATE, (data: { gameId: number; handCounts: Array<{ user
 });
 
 
-socket.on(CARD_DEAL, (data: any) => { 
+socket.on(CARD_DEAL, (data: { gameId: number; cards: DisplayGameCard[] }) => { 
+    console.log("Cards dealt:", data);
+    if (data.gameId.toString() !== gameId) {
+        console.error("invalid game ID" ); 
+        return;
+    }
+
+    myhand = data.cards;
+    renderPlayersHand(myhand);
+
     
 } );
 
-socket.on(CARD_DRAW_COMPLETED, (data: any) => {
+socket.on(CARD_DRAW_COMPLETED, async (data: { gameId: number; userId: number; username: string; count: number}) => {
     console.log("Card drawn:", data);
+    const isCurrentUser = data.userId.toString() === currentUserId;
+    updateDrawPile(data.count);
+
+    if (isCurrentUser) {
+        const response = await fetch(`/games/${gameId}/player_hand`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+        }
+        });
+        const playerHand = await response.json();
+        myhand = playerHand.hand;
+        renderPlayersHand(myhand);
+    }
+        
 });
 
-socket.on(SKIP, (data: any) => {
-    
-    console.log("Skip:", data);
-});
+socket.on(SKIP, (data: { gameId: number; skippedPlayerId: number; skippedUsername: string }) => {
+    console.log("Turn skipped:", data);
 
-socket.on(REVERSE, (data: any) => {
-    console.log("Reverse:", data);
-});
+    const currentPlayer = players.find(p => p.id === data.skippedPlayerId);
+    const playerName = currentPlayer ? currentPlayer.username : data.skippedUsername;
 
-
-// example of how code looks like 
-socket.on(COLOR_CHOSEN, (data: { gameId: number; userId: number; username: string; chosenColor: string} ) => {
+    if(data.skippedPlayerId.toString() == currentUserId){
+        showGameNotification(`Your turn was skipped`, 'info');
+        return;
+    }else{
+        showGameNotification(`${playerName}'s turn was skipped`, 'info');
+    }
    
+    
+    
+
+
 });
 
-socket.on(GAME_END, (data: any) => {
+socket.on(REVERSE, (data: { gameId: number; newDirection: number;}) => {
+    console.log("Reverse:", data);
+    isClockwise = data.newDirection === 1;
+    updateDirectionSprite(isClockwise);
+    showGameNotification("Game direction reversed!", 'info');
+
+});
+
+
+
+socket.on(COLOR_CHOSEN, (data: { gameId: number; userId: number; username: string; chosenColor: string} ) => {
+   console.log("Color chosen:", data);
+   console.log(`${data.username} chose ${data.chosenColor}`, 'info');
+   if(topDiscardCard) {
+         topDiscardCard.color = data.chosenColor;
+         renderDiscardPile([topDiscardCard]);
+   }
+});
+
+socket.on(GAME_END, (data: { gameId: number; winnerId: number; winnerUsername: string }) => {
     console.log("Game ended:", data);
+
+    showWinnerScreen(data.winnerUsername, data.winnerId);
+
 });
 
-socket.on(ERROR, (error: any) => {
-    console.error("Game error:", error);
+socket.on(ERROR, (data: { gameId: number; error: string; userId?: number }) => {
+    console.error("Game error:", data);
+    showGameNotification(`Error: ${data.error}`, 'warning');
+
 });
 
 
@@ -167,11 +178,30 @@ socket.on(ERROR, (error: any) => {
 
 const initGame = async () => {
     console.log("Initializing game...", { gameId, currentUserId });
-   
 }
 
-const uptateTurn = async () => {
+const updateTurn = async () => {
+    const turnData = await getCurrentTurn();
 
+    if (!turnData) {
+        return;
+    }
+
+    currentPlayerId = turnData.currentPlayerId;
+    isClockwise = turnData.direction === 1;
+    myTurn = currentPlayerId === parseInt(currentUserId);
+
+    const currentPlayer = players.find(p => p.id === currentPlayerId);
+    const playerName = currentPlayer ? currentPlayer.username : `Player ${currentPlayerId}`;
+
+    updateTurnSprite(currentPlayerId, playerName, myTurn);
+    updateDirectionSprite(isClockwise);
+
+    if (myTurn) {
+        showGameNotification("It's your turn!", 'info');
+    } else {
+        showGameNotification(`${playerName}'s turn`, 'info');
+    }
 }
 
 const cardIsPlayable = (card: DisplayGameCard, topCard: DisplayGameCard): boolean => {
@@ -197,19 +227,18 @@ const cardIsPlayable = (card: DisplayGameCard, topCard: DisplayGameCard): boolea
 
 const playSelectedCard = async (selectedCardId: number) => {
     if (!myTurn) {
-        showGameNotification("It's not your turn!", 'warning');
+        console.log(" not your turn!");
         return;
     }
 
     const selectedCard = myhand.find(c => c.id === selectedCardId);
     if (!selectedCard) {
-        showGameNotification("Card not found in your hand", 'warning');
+        console.log("Card is not in your hand.");
         return;
     }
 
     if (!cardIsPlayable(selectedCard, topDiscardCard!)) {
-
-        showGameNotification("You cannot play that card", 'warning');
+        console.log("You may not play that card");
     }
 
    
@@ -222,23 +251,92 @@ const playSelectedCard = async (selectedCardId: number) => {
     }
 }
 
-const colorSelection = async ( selectedCardId: number) => {
-
+const colorSelection = async (selectedCardId: number) => {
+    const chosenColor = await showColorSelectionUI();
+    //await playCard(selectedCardId, chosenColor);
 }
 
+const endTurn = async () => {
+   try {
+        const response = await fetch(`/games/${gameId}/end-turn`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
 
-const passTurn = async () => {
+        if (!response.ok) {
+            console.error("Failed to end turn");
+            myTurn = true;
+            return;
+        }
+
+       myTurn = false;
+    } catch (error) {
+        console.error("Error ending turn:", error);
+   }
+
+};
+
+
+const skipTurn = async ( currentPlayerId: number) => {
+    try {
+        const response = await fetch(`/games/${gameId}/skip`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+    }
+    catch (error) {
+        console.error("Error skipping turn:", error);
+    }
+    await endTurn();
+
+
+
 
 }
 
 // api calls
-const drawCard = async () => {
+const drawCard = async (count: number = 1) => {
+    try {
+        const response = await fetch(`/games/${gameId}/draw`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ count }),
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            console.error("Failed to draw card");
+
+
+        }
+        const result = await response.json();
+
+        // Auto-end turn after drawing
+        await endTurn();
+
+        return result;
+        
+
+
+    } catch (error) {
+        console.error("Error drawing card", error);
+
+
+    }
 
 }
 
 const playCard = async (cardId: number, chosenColor?: string) => {
     try {
-        const response = await fetch(`/games/${gameId}/play-card`, {
+        const response = await fetch(`/games/${gameId}/play`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -249,7 +347,7 @@ const playCard = async (cardId: number, chosenColor?: string) => {
 
         if (!response.ok) {
             const errorData = await response.json();
-            showGameNotification(`Error playing card: ${errorData.message}`, 'warning');
+            showGameNotification(`error playing card ${errorData.message}`, 'warning');
             return;
         }
 
@@ -257,19 +355,43 @@ const playCard = async (cardId: number, chosenColor?: string) => {
         myhand = myhand.filter(c => c.id !== cardId);
         renderPlayersHand(myhand);
 
+        await endTurn();
+
         const result = await response.json();
         return result;
+      
     } catch (error) {
         console.error("Error playing card:", error);
-        showGameNotification("Failed to play card. Please try again.", 'warning');
+
+        
     }
 }
 
-const endTurn = async () => {
 
-}
 
 const getCurrentTurn = async () => {
+    try {
+        const response = await fetch(`/games/${gameId}/turn`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            console.error("failed to fetch turn");
+            return null;
+        }
+
+        const turnData = await response.json();
+        console.log("Current turn:", turnData);
+
+        return turnData;
+    } catch (error) {
+        console.error("Error getting turnnfo i:", error);
+        return null;
+    }
 }
 
 

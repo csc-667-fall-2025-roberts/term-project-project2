@@ -28,7 +28,7 @@ export async function StartGame(gameId: number): Promise<{firstPlayerId: number}
   const players = await Games.getPlayers(gameId);
 
   if(players.length < 2){
-    throw new Error("Not enough players to start the game");
+    throw new Error("Not enough players ");
   }
 
   const playerIds = players.map((p: GamePlayer) => p.user_id);
@@ -39,7 +39,7 @@ export async function StartGame(gameId: number): Promise<{firstPlayerId: number}
 
   for (let i = 0; i < shuffledPlayers.length; i++){
     const playerId = shuffledPlayers[i];
-    await GameCards.drawCards(gameId, playerIds[i], Cards_Per_Player);
+    await GameCards.drawCards(gameId, playerId, Cards_Per_Player);
     await Games.setPlayerPosition(gameId, i+1, playerId);
   }
 
