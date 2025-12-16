@@ -1,8 +1,8 @@
+// Followed similar logic to the chat.ts for the lobby page
 import socketIo from "socket.io-client";
 import type { ChatMessage } from "../types/types";
 import * as chatKeys from "../shared/keys";
 
-// Only run if we are on a page that has the chat UI
 const gameChatWindow = document.querySelector<HTMLDivElement>("#gameChatWindow");
 const gameChatToggle = document.querySelector<HTMLButtonElement>("#gameChatToggle");
 const gameChatClose = document.querySelector<HTMLButtonElement>("#gameChatClose");
@@ -10,10 +10,8 @@ const gameChatMessages = document.querySelector<HTMLDivElement>("#gameChatMessag
 const gameChatForm = document.querySelector<HTMLFormElement>("#gameChatForm");
 const gameChatInput = document.querySelector<HTMLInputElement>("#gameChatInput");
 
-// Reuse same socket & events as lobby chat
 const gameChatSocket = socketIo();
 
-// Try to reuse your lobby "who am I" logic if .user-info is present
 const getUserIdFromPage = (): number => {
   const userInfoText = document.querySelector(".user-info")?.textContent || "";
   const match = userInfoText.match(/ID: (\d+)/);
@@ -61,11 +59,10 @@ const appendGameChatMessage = ({ username, created_at, message, user_id }: ChatM
   wrapper.appendChild(textDiv);
 
   gameChatMessages.appendChild(wrapper);
-  // auto-scroll to bottom
+  // scroll to bottom
   gameChatMessages.scrollTop = gameChatMessages.scrollHeight;
 };
 
-// Socket event handlers: same keys as lobby chat
 gameChatSocket.on(chatKeys.CHAT_LISTING, ({ messages }: { messages: ChatMessage[] }) => {
   messages.forEach(appendGameChatMessage);
 });
@@ -95,7 +92,6 @@ const sendGameChatMessage = () => {
   gameChatInput.value = "";
 };
 
-// Form submit & Enter key
 gameChatForm?.addEventListener("submit", (event) => {
   event.preventDefault();
   sendGameChatMessage();
@@ -119,7 +115,6 @@ gameChatClose?.addEventListener("click", () => {
   gameChatWindow.classList.add("hidden");
 });
 
-// On connect, ask server for initial messages (same as lobby chat)
 gameChatSocket.on("connect", () => {
   fetch("/chat/", {
     method: "get",
