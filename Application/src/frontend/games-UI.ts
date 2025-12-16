@@ -99,26 +99,107 @@ export const renderOtherPlayers = async(players: User[], playerHands: Record<num
 // the rest of methods that we will need4
 
 export const renderTopCard = async(card: DisplayGameCard) => {
+        const discardCard = document.getElementById("discardCard");
+    if (!discardCard) {
+        console.error("[renderTopCard] #discardCard element not found");
+        return;
+    }
+
+    // Update value (number / symbol)
+    discardCard.textContent = card.value;
+
+    // Ensure we always keep the base class + the correct color class
+    // card.color is expected to be like "card-red", "card-blue", etc.
+    const classes = ["uno-card"];
+    if (card.color) {
+        classes.push(card.color);
+    }
+
+    discardCard.className = classes.join(" ");
+
+    // Optional but nice for debugging / future logic
+    discardCard.setAttribute("data-card-id", card.id.toString());
 };
 
 // Update the turn indicator text (#turnText) to show whose turn it is
-export const updateTurnSprite = async(currentPlayerId: number, playerName: string, isYourTurn: boolean) => {
+export const updateTurnSprite = async(
+    currentPlayerId: number, 
+    playerName: string, 
+    isYourTurn: boolean
+) => {
+        const turnText = document.getElementById("turnText");
+    if (!turnText) {
+        console.error("[updateTurnSprite] #turnText element not found");
+        return;
+    }
 
+    // Track whose turn for debugging / potential styling
+    turnText.setAttribute("data-current-player-id", currentPlayerId.toString());
+
+    if (isYourTurn) {
+        turnText.textContent = "Your Turn";
+        turnText.classList.add("your-turn");
+    } else {
+        turnText.textContent = `${playerName}'s Turn`;
+        turnText.classList.remove("your-turn");
+    }
 };
 
 // Update the direction arrow (#directionArrow) to show game direction
 export const updateDirectionSprite = async(isClockwise: boolean) => {
+        const directionArrow = document.getElementById("directionArrow");
+    const directionText = document.getElementById("directionText");
+
+    if (!directionArrow || !directionText) {
+        console.error("[updateDirectionSprite] direction UI elements not found");
+        return;
+    }
+
+    // Same behavior as the inline updateDirectionUI:
+    if (isClockwise) {
+        directionArrow.classList.remove("reverse"); // CSS flips when .reverse is present
+        directionText.textContent = "Clockwise";
+    } else {
+        directionArrow.classList.add("reverse");
+        directionText.textContent = "Counterclockwise";
+    }
+
+    // Optional: data attribute for debugging / CSS
+    directionArrow.setAttribute(
+        "data-direction",
+        isClockwise ? "clockwise" : "counterclockwise"
+    );
 
 };
 
 // Update the player's card count display (#playerCardCount)
 export const updateHandCount = async(count: number) => {
+        const playerCardCountSpan = document.getElementById("playerCardCount");
+    if (!playerCardCountSpan) {
+        console.error("[updateHandCount] #playerCardCount element not found");
+        return;
+    }
+
+    playerCardCountSpan.textContent = count.toString();
 
 };
 
 // Update the draw pile count display (#drawPileCount)
 export const updateDrawPile = async(count: number) => {
+        const drawPileCountSpan = document.getElementById("drawPileCount");
+    if (!drawPileCountSpan) {
+        console.error("[updateDrawPile] #drawPileCount element not found");
+        return;
+    }
 
+    drawPileCountSpan.textContent = count.toString();
+
+    // Optional: visual state when empty
+    if (count === 0) {
+        drawPileCountSpan.classList.add("empty-draw-pile");
+    } else {
+        drawPileCountSpan.classList.remove("empty-draw-pile");
+    }
 };
 
 // Show the color picker modal (#colorPickerOverlay) for Wild cards
@@ -161,6 +242,23 @@ export const updateAllPlayerHandCounts = async(handCounts: Array<{ userId: numbe
     });
 };
 
+declare global {
+  interface Window {
+    renderTopCard?: typeof renderTopCard;
+    updateTurnSprite?: typeof updateTurnSprite;
+    updateDirectionSprite?: typeof updateDirectionSprite;
+    updateHandCount?: typeof updateHandCount;
+    updateDrawPile?: typeof updateDrawPile;
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.renderTopCard = renderTopCard;
+  window.updateTurnSprite = updateTurnSprite;
+  window.updateDirectionSprite = updateDirectionSprite;
+  window.updateHandCount = updateHandCount;
+  window.updateDrawPile = updateDrawPile;
+}
 
 
 

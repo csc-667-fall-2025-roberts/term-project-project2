@@ -166,6 +166,34 @@
     </div>
   </div>
 
+    <!-- In-game Chat Toggle Button -->
+  <button id="gameChatToggle" class="game-chat-toggle">
+    Chat
+  </button>
+
+  <!-- In-game Chat Popup -->
+  <div id="gameChatWindow" class="game-chat-window hidden">
+    <div class="game-chat-header">
+      <span>Game Chat</span>
+      <button id="gameChatClose" class="chat-close-btn">✕</button>
+    </div>
+
+    <div id="gameChatMessages" class="game-chat-messages">
+      <!-- messages will be appended here -->
+    </div>
+
+    <form id="gameChatForm" class="game-chat-form">
+      <input
+        id="gameChatInput"
+        type="text"
+        placeholder="Type a message..."
+        autocomplete="off"
+      />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+
+
   <script>
     // All of this has to be moved onto a separate js file. 
     // need guidance on location!!
@@ -432,6 +460,8 @@
     });
 
   </script>
+  <script type="module" src="/js/game.js"></script>
+  <script type="module" src="/js/ingameChat.js"></script>
 </body>
 
 </html>
