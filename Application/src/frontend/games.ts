@@ -97,7 +97,7 @@ socket.on(CARD_DEAL, (data: { gameId: number; cards: DisplayGameCard[] }) => {
     }
 
     myhand = data.cards;
-    renderPlayersHand(myhand);
+    renderPlayersHand(myhand,topDiscardCard, myTurn);
 
     
 } );
@@ -116,7 +116,7 @@ socket.on(CARD_DRAW_COMPLETED, async (data: { gameId: number; userId: number; us
         });
         const playerHand = await response.json();
         myhand = playerHand.hand;
-        renderPlayersHand(myhand);
+        renderPlayersHand(myhand,topDiscardCard, myTurn);
     }
         
 });
@@ -178,7 +178,82 @@ socket.on(ERROR, (data: { gameId: number; error: string; userId?: number }) => {
 
 const initGame = async () => {
     console.log("Initializing game...", { gameId, currentUserId });
-}
+
+    const turnResponse = await fetch(`/games/${gameId}/turn`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+    });
+    const turnData = await turnResponse.json();
+    currentPlayerId = turnData.currentPlayerId;
+    isClockwise = turnData.direction === 1;
+    myTurn = currentPlayerId === parseInt(currentUserId);
+
+    const response = await fetch(`/games/${gameId}/players`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+    });
+    const playersData = await response.json();
+    players = playersData.players;
+    
+    const discard = await fetch(`/games/${gameId}/discard_pile`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+    });
+
+    const discardData = await discard.json();
+    if (discardData.discardPile.length > 0) {
+        const displayCard = discardData.discardPile[discardData.discardPile.length - 1];
+        topDiscardCard = displayCard;
+        renderDiscardPile([displayCard]);
+    }
+    else {
+        topDiscardCard = null;
+        renderDiscardPile([]);
+    }
+
+    const handResponse = await fetch(`/games/${gameId}/player_hand`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+    });
+    const playerHand = await handResponse.json();
+    myhand = playerHand.hand;
+    renderPlayersHand(myhand,topDiscardCard, myTurn);
+    updateHandCount(myhand.length);
+
+    const hCResponse = await fetch(`/games/${gameId}/hand_counts`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+    });
+    const handCountsData = await hCResponse.json();
+    const handCounts = Object.fromEntries(
+        handCountsData.handCounts.map((hc: { userId: number; cardCount: number }) => [hc.userId, hc.cardCount])
+    );
+
+
+    
+
+    renderOtherPlayers(players,handCounts, currentUserId, currentPlayerId);
+    updateTurnSprite(currentPlayerId, players.find(p => p.id === currentPlayerId) ?.username || '', myTurn);
+    updateDirectionSprite(isClockwise);
+    updateDrawPile(108 - myhand.length); 
+    
+    }
+
 
 const updateTurn = async () => {
     const turnData = await getCurrentTurn();
@@ -353,7 +428,7 @@ const playCard = async (cardId: number, chosenColor?: string) => {
 
     
         myhand = myhand.filter(c => c.id !== cardId);
-        renderPlayersHand(myhand);
+        renderPlayersHand(myhand, topDiscardCard, myTurn);
 
         await endTurn();
 

@@ -30,55 +30,8 @@
   <!-- Game Container -->
   <div class="game-container">
     <!-- Opponents Area -->
-    <div class="opponents-area" id="opponentsArea">
-      <!-- Example opponent layout (static for now) -->
-      <div class="opponent">
-        <div class="opponent-info">
-          <div class="opponent-name">Player 1</div>
-          <div class="opponent-card-count">7 cards</div>
-        </div>
-        <div class="opponent-hand">
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-        </div>
-      </div>
-
-      <div class="opponent">
-        <div class="opponent-info active-player">
-          <div class="opponent-name">Player 2</div>
-          <div class="opponent-card-count active-turn">7 cards</div>
-        </div>
-        <div class="opponent-hand">
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-        </div>
-      </div>
-
-      <div class="opponent">
-        <div class="opponent-info">
-          <div class="opponent-name">Player 3</div>
-          <div class="opponent-card-count">7 cards</div>
-        </div>
-        <div class="opponent-hand">
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-          <div class="opponent-card"></div>
-        </div>
-      </div>
+    <div class="opponents-area" id="other-players">
+      <!-- Dynamic opponent rendering handled by games-UI.ts -->
     </div>
 
     <!-- Center Play Area -->
@@ -135,26 +88,8 @@
         </div>
       </div>
       <div class="player-cards" id="playerCards">
-        <div class="player-card-wrapper">
-          <div class="uno-card player-card card-red clickable">3</div>
-        </div>
-        <div class="player-card-wrapper">
-          <div class="uno-card player-card card-yellow clickable">⟲</div>
-        </div>
-        <div class="player-card-wrapper">
-          <div class="uno-card player-card card-green clickable">7</div>
-        </div>
-        <div class="player-card-wrapper">
-          <div class="uno-card player-card card-blue clickable">+2</div>
-        </div>
-        <div class="player-card-wrapper">
-          <div class="uno-card player-card card-red clickable">9</div>
-        </div>
-        <div class="player-card-wrapper">
-          <div class="uno-card player-card card-wild clickable">★</div>
-        </div>
-        <div class="player-card-wrapper">
-          <div class="uno-card player-card card-wild clickable">★+4</div>
+        <div class="player-card-wrapper" style="display: none;">
+          <div class="uno-card player-card"></div>
         </div>
       </div>
     </div>

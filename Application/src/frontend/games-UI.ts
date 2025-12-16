@@ -8,7 +8,7 @@ import type { DisplayGameCard, User  } from "../types/types";
 
 
 // also animations will also be added here
-export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
+export const renderPlayersHand = async(cards : DisplayGameCard[], topCard : DisplayGameCard | null, myTurn : boolean ) => {
     const playerHandDiv = document.getElementById(`playerCards`);
     if (!playerHandDiv) {
         console.error(`Player hand div not found`);
@@ -22,13 +22,25 @@ export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
     }
 
     playerHandDiv.innerHTML = '';
+    playerHandDiv.appendChild(templete); 
+
 
     cards.forEach(card => {
         const clone = templete.cloneNode(true) as HTMLElement;
+        clone.style.display = 'inline-block';
         const cards = clone.querySelector('.uno-card');
 
         if (cards) {
-            cards.className = `uno-card ${card.color} clickable`;
+            const playable = myTurn && (topCard ? (card.color === topCard.color || card.value === topCard.value || card.color === 'wild') : true);
+            const classes = ['uno-card', `card-${card.color}`, `${playable ? 'playable' : 'not-playable'}`];
+
+            if (playable) {
+                cards.classList.add('playable');
+            } else {
+                cards.classList.add('not-playable');
+            }
+
+            cards.className = classes.join(' ');
 
             cards.textContent = card.value;
 
@@ -41,7 +53,7 @@ export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
       
     });
 
-    const cardCountSpan = document.getElementById('playercCardCount');
+    const cardCountSpan = document.getElementById('playerCardCount');
     if (cardCountSpan) {
         cardCountSpan.textContent = cards.length.toString();
     }
@@ -49,12 +61,11 @@ export const renderPlayersHand = async(cards : DisplayGameCard[]) => {
 
 
 export const renderDiscardPile = async (cards : DisplayGameCard[]) => {
-    const discardPileDiv = document.getElementById('game-discard');
+    const discardPileDiv = document.getElementById('discardCard');
     if (!discardPileDiv) {
         console.error('Discard pile div not found');
         return;
     }
-    discardPileDiv.innerHTML = '';
     if (cards.length === 0) {
         console.error('No cards in discard pile');
         return;
@@ -85,6 +96,7 @@ export const renderOtherPlayers = async(players: User[], playerHands: Record<num
     otherPlayers.forEach(player => {
         const playerDiv = document.createElement('div');
         playerDiv.className = 'other-player';
+        playerDiv.setAttribute('data-player-id', player.id.toString());
         playerDiv.innerHTML = `
             <div class="player-avatar">
                 <div class="player-name">${player.username}</div>
@@ -340,34 +352,6 @@ export const showGameNotification = async(message: string, type: 'info' | 'warni
 
 };
 
-// TEMP: expose helpers to the browser console for manual testing -- DELETE LATER -----------
-declare global {
-    interface Window {
-      debugShowWinnerScreen?: (winnerName: string, winnerId: number) => void;
-      debugNotify?: (message: string, type?: "info" | "warning" | "success") => void;
-    }
-  }
-  
-  if (typeof window !== "undefined") {
-    window.debugShowWinnerScreen = showWinnerScreen;
-    window.debugNotify = showGameNotification;
-  }
-  
-  export {}; // keep this so the file is treated as a module
-
-  declare global {
-    interface Window {
-      debugColorPicker?: () => Promise<string>;
-    }
-  }
-  
-  if (typeof window !== "undefined") {
-    window.debugColorPicker = showColorSelectionUI;
-  }
-  
-  
-// ------------------------------------------------------------------------------------------
-
 export const updateAllPlayerHandCounts = async(handCounts: Array<{ userId: number; cardCount: number }>, currentUserId: string) => {
     handCounts.forEach(({ userId, cardCount }) => {
         const playerCardCountElement = document.querySelector(`.other-player[data-player-id="${userId}"] .player-card-count`);
@@ -381,24 +365,6 @@ export const updateAllPlayerHandCounts = async(handCounts: Array<{ userId: numbe
         }
     });
 };
-
-declare global {
-  interface Window {
-    renderTopCard?: typeof renderTopCard;
-    updateTurnSprite?: typeof updateTurnSprite;
-    updateDirectionSprite?: typeof updateDirectionSprite;
-    updateHandCount?: typeof updateHandCount;
-    updateDrawPile?: typeof updateDrawPile;
-  }
-}
-
-if (typeof window !== "undefined") {
-  window.renderTopCard = renderTopCard;
-  window.updateTurnSprite = updateTurnSprite;
-  window.updateDirectionSprite = updateDirectionSprite;
-  window.updateHandCount = updateHandCount;
-  window.updateDrawPile = updateDrawPile;
-}
 
 
 
