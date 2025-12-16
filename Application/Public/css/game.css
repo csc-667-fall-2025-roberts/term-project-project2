@@ -502,8 +502,6 @@ body {
   }
 }
 
-/* -------- In-game chat popup -------- */
-
 .game-chat-toggle {
   position: fixed;
   bottom: 1.5rem;
@@ -564,7 +562,6 @@ body {
   font-size: 0.8rem;
 }
 
-/* Message bubbles */
 .game-chat-message {
   padding: 0.4rem 0.6rem;
   border-radius: 0.6rem;

@@ -1,5 +1,5 @@
 import { HtmlTagDescriptor } from "vite";
-import type { DisplayGameCard, User  } from "../types/types";
+import type { DisplayGameCard, User } from "../types/types";
 
 
 
@@ -9,6 +9,7 @@ import type { DisplayGameCard, User  } from "../types/types";
 
 // also animations will also be added here
 export const renderPlayersHand = async(cards : DisplayGameCard[], topCard : DisplayGameCard | null, myTurn : boolean ) => {
+export const renderPlayersHand = async (cards: DisplayGameCard[]) => {
     const playerHandDiv = document.getElementById(`playerCards`);
     if (!playerHandDiv) {
         console.error(`Player hand div not found`);
@@ -50,7 +51,7 @@ export const renderPlayersHand = async(cards : DisplayGameCard[], topCard : Disp
         }
 
         playerHandDiv.appendChild(clone);
-      
+
     });
 
     const cardCountSpan = document.getElementById('playerCardCount');
@@ -62,6 +63,8 @@ export const renderPlayersHand = async(cards : DisplayGameCard[], topCard : Disp
 
 export const renderDiscardPile = async (cards : DisplayGameCard[]) => {
     const discardPileDiv = document.getElementById('discardCard');
+export const renderDiscardPile = async (cards: DisplayGameCard[]) => {
+    const discardPileDiv = document.getElementById('game-discard');
     if (!discardPileDiv) {
         console.error('Discard pile div not found');
         return;
@@ -80,7 +83,7 @@ export const renderDiscardPile = async (cards : DisplayGameCard[]) => {
 };
 
 
-export const renderOtherPlayers = async(players: User[], playerHands: Record<number, number>, currentUserId: string, currentPlayerId: number) => {
+export const renderOtherPlayers = async (players: User[], playerHands: Record<number, number>, currentUserId: string, currentPlayerId: number) => {
     const otherPlayersDiv = document.getElementById('other-players');
     if (!otherPlayersDiv) {
         console.error('Other players div not found');
@@ -111,8 +114,8 @@ export const renderOtherPlayers = async(players: User[], playerHands: Record<num
 
 // the rest of methods that we will need4
 
-export const renderTopCard = async(card: DisplayGameCard) => {
-        const discardCard = document.getElementById("discardCard");
+export const renderTopCard = async (card: DisplayGameCard) => {
+    const discardCard = document.getElementById("discardCard");
     if (!discardCard) {
         console.error("[renderTopCard] #discardCard element not found");
         return;
@@ -135,12 +138,12 @@ export const renderTopCard = async(card: DisplayGameCard) => {
 };
 
 // Update the turn indicator text (#turnText) to show whose turn it is
-export const updateTurnSprite = async(
-    currentPlayerId: number, 
-    playerName: string, 
+export const updateTurnSprite = async (
+    currentPlayerId: number,
+    playerName: string,
     isYourTurn: boolean
 ) => {
-        const turnText = document.getElementById("turnText");
+    const turnText = document.getElementById("turnText");
     if (!turnText) {
         console.error("[updateTurnSprite] #turnText element not found");
         return;
@@ -159,8 +162,8 @@ export const updateTurnSprite = async(
 };
 
 // Update the direction arrow (#directionArrow) to show game direction
-export const updateDirectionSprite = async(isClockwise: boolean) => {
-        const directionArrow = document.getElementById("directionArrow");
+export const updateDirectionSprite = async (isClockwise: boolean) => {
+    const directionArrow = document.getElementById("directionArrow");
     const directionText = document.getElementById("directionText");
 
     if (!directionArrow || !directionText) {
@@ -186,8 +189,8 @@ export const updateDirectionSprite = async(isClockwise: boolean) => {
 };
 
 // Update the player's card count display (#playerCardCount)
-export const updateHandCount = async(count: number) => {
-        const playerCardCountSpan = document.getElementById("playerCardCount");
+export const updateHandCount = async (count: number) => {
+    const playerCardCountSpan = document.getElementById("playerCardCount");
     if (!playerCardCountSpan) {
         console.error("[updateHandCount] #playerCardCount element not found");
         return;
@@ -198,8 +201,8 @@ export const updateHandCount = async(count: number) => {
 };
 
 // Update the draw pile count display (#drawPileCount)
-export const updateDrawPile = async(count: number) => {
-        const drawPileCountSpan = document.getElementById("drawPileCount");
+export const updateDrawPile = async (count: number) => {
+    const drawPileCountSpan = document.getElementById("drawPileCount");
     if (!drawPileCountSpan) {
         console.error("[updateDrawPile] #drawPileCount element not found");
         return;
@@ -236,10 +239,10 @@ export const showColorSelectionUI = (): Promise<string> => {
             const target = event.currentTarget as HTMLDivElement;
 
             let chosenColor: string | null = null;
-            if (target.classList.contains("red"))    chosenColor = "red";
-            else if (target.classList.contains("blue"))   chosenColor = "blue";
+            if (target.classList.contains("red")) chosenColor = "red";
+            else if (target.classList.contains("blue")) chosenColor = "blue";
             else if (target.classList.contains("yellow")) chosenColor = "yellow";
-            else if (target.classList.contains("green"))  chosenColor = "green";
+            else if (target.classList.contains("green")) chosenColor = "green";
 
             if (!chosenColor) {
                 return;
@@ -264,20 +267,20 @@ export const showColorSelectionUI = (): Promise<string> => {
 };
 
 // if we need to close the color picker modal manually
-export const hideColorSelectionUI = async() => {
+export const hideColorSelectionUI = async () => {
     const overlay = document.getElementById("colorPickerOverlay");
-    if(overlay){
+    if (overlay) {
         overlay.classList.remove("active");
     }
 
 };
 
 // Display winner screen when game ends
-export const showWinnerScreen = async(winnerName: string, winnerId: number) => {
-    console.log("showWinnerScreen fired!", { winnerName, winnerId }); 
+export const showWinnerScreen = async (winnerName: string, winnerId: number) => {
+    console.log("showWinnerScreen fired!", { winnerName, winnerId });
 
     const overlay = document.getElementById("gameover-overlay");
-    if(!overlay){
+    if (!overlay) {
         console.error("gameover overlay not found");
         return;
     }
@@ -290,20 +293,20 @@ export const showWinnerScreen = async(winnerName: string, winnerId: number) => {
     const currentUserIdStr = document.body.dataset.userId;
     const isYou = currentUserIdStr && parseInt(currentUserIdStr, 10) === winnerId;
 
-    if (titleEl){
+    if (titleEl) {
         titleEl.textContent = isYou ? "YOU WIN!" : "GAME OVER!";
     }
 
-    if (messageEl){
+    if (messageEl) {
         messageEl.textContent = isYou
-        ? "Congratulations, you won the game!"
-        : `${winnerName} has won the game.`;
+            ? "Congratulations, you won the game!"
+            : `${winnerName} has won the game.`;
     }
 
     // show the overlay
     overlay.classList.add("active");
 
-    if(closeBtn){
+    if (closeBtn) {
         closeBtn.onclick = () => {
             // hide overlay
             overlay.classList.remove("active");
@@ -315,12 +318,12 @@ export const showWinnerScreen = async(winnerName: string, winnerId: number) => {
 
 
 // Display game over screen
-export const showGameOverScreen = async() => {
+export const showGameOverScreen = async () => {
 
 };
 
 // Show toast notification for game events ("Skip!", "Reverse!", "Draw 2!", etc.)
-export const showGameNotification = async(message: string, type: 'info' | 'warning' | 'success' = 'info') => {
+export const showGameNotification = async (message: string, type: 'info' | 'warning' | 'success' = 'info') => {
     const container = document.getElementById("notification-container");
     if (!container) {
         console.error("Notification container not found");
@@ -352,19 +355,65 @@ export const showGameNotification = async(message: string, type: 'info' | 'warni
 
 };
 
-export const updateAllPlayerHandCounts = async(handCounts: Array<{ userId: number; cardCount: number }>, currentUserId: string) => {
+// TEMP: expose helpers to the browser console for manual testing -- DELETE LATER -----------
+declare global {
+    interface Window {
+        debugShowWinnerScreen?: (winnerName: string, winnerId: number) => void;
+        debugNotify?: (message: string, type?: "info" | "warning" | "success") => void;
+    }
+}
+
+if (typeof window !== "undefined") {
+    window.debugShowWinnerScreen = showWinnerScreen;
+    window.debugNotify = showGameNotification;
+}
+
+export { }; // keep this so the file is treated as a module
+
+declare global {
+    interface Window {
+        debugColorPicker?: () => Promise<string>;
+    }
+}
+
+if (typeof window !== "undefined") {
+    window.debugColorPicker = showColorSelectionUI;
+}
+
+
+// ------------------------------------------------------------------------------------------
+
+export const updateAllPlayerHandCounts = async (handCounts: Array<{ userId: number; cardCount: number }>, currentUserId: string) => {
     handCounts.forEach(({ userId, cardCount }) => {
         const playerCardCountElement = document.querySelector(`.other-player[data-player-id="${userId}"] .player-card-count`);
         if (playerCardCountElement) {
             playerCardCountElement.textContent = `Cards: ${cardCount}`;
         }
 
- 
+
         if (userId.toString() === currentUserId) {
             updateHandCount(cardCount);
         }
     });
 };
+
+declare global {
+    interface Window {
+        renderTopCard?: typeof renderTopCard;
+        updateTurnSprite?: typeof updateTurnSprite;
+        updateDirectionSprite?: typeof updateDirectionSprite;
+        updateHandCount?: typeof updateHandCount;
+        updateDrawPile?: typeof updateDrawPile;
+    }
+}
+
+if (typeof window !== "undefined") {
+    window.renderTopCard = renderTopCard;
+    window.updateTurnSprite = updateTurnSprite;
+    window.updateDirectionSprite = updateDirectionSprite;
+    window.updateHandCount = updateHandCount;
+    window.updateDrawPile = updateDrawPile;
+}
 
 
 
