@@ -54,13 +54,13 @@ socket.on(GAME_STATE_UPDATE, (data: { gameId: number; state: string }) => {
 });
 
 
-socket.on(TURN_CHANGE, (turnData: { currentPlayerId: number, turnDirection: number, player_order: number, gameId: number }) => {
+socket.on(TURN_CHANGE, async (turnData: { currentPlayerId: number, turnDirection: number, player_order: number, gameId: number }) => {
     console.log("Turn changed:", turnData);
     currentPlayerId = turnData.currentPlayerId;
     isClockwise = turnData.turnDirection === 1;
     myTurn = currentPlayerId === parseInt(currentUserId);
 
- 
+
     const currentPlayer = players.find(p => p.id === currentPlayerId);
     const playerName = currentPlayer ? currentPlayer.username : `Player ${currentPlayerId}`;
 
@@ -68,7 +68,20 @@ socket.on(TURN_CHANGE, (turnData: { currentPlayerId: number, turnDirection: numb
 
     updateDirectionSprite(isClockwise);
 
-    if (myTurn) {
+    // Re-render hand to update card clickability
+    renderPlayersHand(myhand, topDiscardCard, myTurn);
+
+    // Extract hand counts from existing players data
+    const playerHandCount: Record<number, number> = {};
+    players.forEach((p: any) => {
+        if (p.id) {
+            playerHandCount[p.id] = p.cardCount || 0;
+        }
+    });
+
+    renderOtherPlayers(players, playerHandCount, currentUserId, currentPlayerId);
+
+    if (myTurn){
         showGameNotification("It's your turn!", 'info');
     } else {
         showGameNotification(`${playerName}'s turn`, 'info');
@@ -80,12 +93,21 @@ socket.on(CARD_PLAY, (data: { gameId: number; userId: number; username: string; 
     console.log("Card played:", data);
     topDiscardCard = data.card;
     renderDiscardPile([data.card]);
+
+    // Re-render hand to update which cards are playable based on new top card
+    renderPlayersHand(myhand, topDiscardCard, myTurn);
 });
 
 
 socket.on( PLAYER_HAND_UPDATE, (data: { gameId: number; handCounts: Array<{ userId: number; cardCount: number }> } ) => {
     console.log("Player hand updated:", data);
     updateAllPlayerHandCounts(data.handCounts, currentUserId);
+
+    // Update the visual representation of other players
+    const handCountsMap = Object.fromEntries(
+        data.handCounts.map(({ userId, cardCount }) => [userId, cardCount])
+    );
+    renderOtherPlayers(players, handCountsMap, currentUserId, currentPlayerId);
 });
 
 
@@ -120,6 +142,9 @@ socket.on(CARD_DRAW_COMPLETED, async (data: { gameId: number; userId: number; us
     }
         
 });
+
+
+
 
 socket.on(SKIP, (data: { gameId: number; skippedPlayerId: number; skippedUsername: string }) => {
     console.log("Turn skipped:", data);
@@ -214,8 +239,7 @@ const initGame = async () => {
         const displayCard = discardData.discardPile[discardData.discardPile.length - 1];
         topDiscardCard = displayCard;
         renderDiscardPile([displayCard]);
-    }
-    else {
+    } else {
         topDiscardCard = null;
         renderDiscardPile([]);
     }
@@ -232,26 +256,16 @@ const initGame = async () => {
     renderPlayersHand(myhand,topDiscardCard, myTurn);
     updateHandCount(myhand.length);
 
-    const hCResponse = await fetch(`/games/${gameId}/hand_counts`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        credentials: "include",
-    });
-    const handCountsData = await hCResponse.json();
+    // Extract hand counts from players data (already included in the response)
     const handCounts = Object.fromEntries(
-        handCountsData.handCounts.map((hc: { userId: number; cardCount: number }) => [hc.userId, hc.cardCount])
+        players.map((p: any) => [p.id, p.cardCount])
     );
 
-
-    
-
-    renderOtherPlayers(players,handCounts, currentUserId, currentPlayerId);
+    renderOtherPlayers(players, handCounts, currentUserId, currentPlayerId);
     updateTurnSprite(currentPlayerId, players.find(p => p.id === currentPlayerId) ?.username || '', myTurn);
     updateDirectionSprite(isClockwise);
-    updateDrawPile(108 - myhand.length); 
-    
+    updateDrawPile(108 - myhand.length);
+
     }
 
 
@@ -301,8 +315,11 @@ const cardIsPlayable = (card: DisplayGameCard, topCard: DisplayGameCard): boolea
 
 
 const playSelectedCard = async (selectedCardId: number) => {
+    
+    
     if (!myTurn) {
         console.log(" not your turn!");
+        showGameNotification("It's not your turn!", 'warning');
         return;
     }
 
@@ -312,11 +329,14 @@ const playSelectedCard = async (selectedCardId: number) => {
         return;
     }
 
-    if (!cardIsPlayable(selectedCard, topDiscardCard!)) {
-        console.log("You may not play that card");
+    if(!topDiscardCard || !cardIsPlayable(selectedCard, topDiscardCard)){
+        console.log("Card is not playable.");
+        showGameNotification("Selected card is not playable.", 'warning');
+        return;
     }
 
-   
+    
+
     // If it's a wild card, show color selection UI
     if (selectedCard.color === "wild") {
         await colorSelection(selectedCardId);
@@ -328,7 +348,7 @@ const playSelectedCard = async (selectedCardId: number) => {
 
 const colorSelection = async (selectedCardId: number) => {
     const chosenColor = await showColorSelectionUI();
-    //await playCard(selectedCardId, chosenColor);
+    await playCard(selectedCardId, chosenColor);
 }
 
 const endTurn = async () => {
@@ -394,9 +414,6 @@ const drawCard = async (count: number = 1) => {
         }
         const result = await response.json();
 
-        // Auto-end turn after drawing
-        await endTurn();
-
         return result;
         
 
@@ -430,7 +447,7 @@ const playCard = async (cardId: number, chosenColor?: string) => {
         myhand = myhand.filter(c => c.id !== cardId);
         renderPlayersHand(myhand, topDiscardCard, myTurn);
 
-        await endTurn();
+        
 
         const result = await response.json();
         return result;
@@ -469,8 +486,84 @@ const getCurrentTurn = async () => {
     }
 }
 
+const eventListeners = () => {
+
+    const playButton = document.getElementById("playCardBtn");
+    const playerCardDiv = document.getElementById("playerCards");
+    const drawpile = document.getElementById("drawPile");
+
+    let selectedCardId: number | null = null;
+
+    if (playerCardDiv) {
+        playerCardDiv.addEventListener("click", async (event) => {
+            const cardElement =( event.target as HTMLElement).closest(".uno-card.player-card");
+            if (!cardElement) {
+                return;
+            }
+
+            if (cardElement.classList.contains("disabled")) {
+
+                return;
+            }
+
+            const cardID =parseInt( cardElement?.getAttribute(`data-card-id`) || '0');
+            if (!cardID) {
+                return;
+            }
+
+            document.querySelectorAll(".uno-card.player-card").forEach(card =>card.classList.remove("selected")); 
+
+            if (selectedCardId === cardID) {
+                selectedCardId = null;
+            } else {
+                selectedCardId = cardID;
+                cardElement.classList.add("selected");
+            }
+
+        });
+    }
+
+    if (playButton) {
+        playButton.addEventListener("click", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (selectedCardId === null) {
+                console.log("No card selected to play.");
+                return;
+            }
+
+            if (!selectedCardId){
+                console.log("Invalid card selected.");
+                showGameNotification('Please select a valid card','warning');
+                return;
+            }
+            await playSelectedCard(selectedCardId);
+            selectedCardId = null;
+
+            });
+    }
+
+    if (drawpile) {
+        drawpile.addEventListener("click", async (event) => {
+            if (!myTurn) {
+                showGameNotification("It's not your turn!", 'warning');
+                return;
+            }
+            await drawCard(1);
+            await endTurn();
+        });
+    }
+
+}
+
+
+
+
+
 
 
 
 // UI Rendering Functions
 initGame();
+eventListeners();

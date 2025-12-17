@@ -45,12 +45,18 @@ export async function validatePlay(gameId: number, userId: number, cardId: numbe
     return { valid: true };
   }
 
-  if(cardToPlay.color === topCard.color || cardToPlay.value === topCard.value){
+  const colorMatch = cardToPlay.color === topCard.color;
+  const valueMatch = cardToPlay.value === topCard.value;
+
+
+  if(colorMatch || valueMatch){
     return { valid: true };
   }
 
-  return { valid: false, reason: "Card doesn't match color or value" };
-}
+  return { valid: false, reason: "Card does not match color or value" };
+
+} 
+ 
 
 
 
@@ -98,6 +104,30 @@ export async function playACard(
     isReverse
   );
 
+  if(isSkip){
+    await Moves.createMove(gameId, userId, 'skip', undefined, undefined, undefined, false);
+  }
+
+  if(isDraw2 || isWildDraw4){
+    const drawCount = isDraw2 ? 2 : 4;
+
+    const turnInfo = await getCurrentTurn(gameId);
+    const nextPlayerId = turnInfo.currentPlayerId;
+    await GameCards.drawCards(gameId, nextPlayerId, drawCount);
+
+    await Moves.createMove(
+      gameId,
+      nextPlayerId,
+      'draw',
+      undefined,
+      undefined,
+      undefined,
+      false
+    );
+  }
+
+      
+
   const remainingCards = await GameCards.getHand(gameId, userId);
   if(remainingCards.length === 0){
     await Games.updateGame(gameId, GameState.ENDED, userId, true);
@@ -138,7 +168,8 @@ export async function drawCards(
 
 
 
-  const deckCount = await GameCards.getDeckCount(gameId);
+  let deckCount = await GameCards.getDeckCount(gameId);
+  
   if(deckCount < drawCount){
     throw new Error("Not enough cards in deck");
   }

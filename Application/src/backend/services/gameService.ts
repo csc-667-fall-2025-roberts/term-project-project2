@@ -3,6 +3,7 @@ import * as Games from "../db/games";
 import * as Moves from "../db/moves";
 import type { GamePlayer, GameCard } from "../../types/types";
 import { GameState } from "../../types/types";
+import logger from "../lib/logger";
 
 const Cards_Per_Player = 7;
 
@@ -45,6 +46,7 @@ export async function StartGame(gameId: number): Promise<{firstPlayerId: number}
 
   let attempts = 0;
   let validStarter = false;
+  let starterCardId: number | undefined;
 
   while(!validStarter && attempts < 20){
     await GameCards.drawCards(gameId, 0, 1);
@@ -57,6 +59,7 @@ export async function StartGame(gameId: number): Promise<{firstPlayerId: number}
 
       if(isValidStarter){
         await GameCards.playCard(starterCard.id, gameId, 0);
+        starterCardId = starterCard.id;
         validStarter = true;
       }
     }
@@ -67,8 +70,15 @@ export async function StartGame(gameId: number): Promise<{firstPlayerId: number}
     const topCards = await GameCards.getHand(gameId, 0);
     if(topCards.length > 0){
       await GameCards.playCard(topCards[0].id, gameId, 0);
+      starterCardId = topCards[0].id;
     }
   }
+
+  if(starterCardId){
+    await Moves.createMove(gameId, shuffledPlayers[0], 'play', starterCardId);
+    logger.info(`Starter card ID ${starterCardId} played to start game ${gameId}`);
+  }
+
 
   await Games.startGame(gameId);
 
@@ -78,8 +88,8 @@ export async function StartGame(gameId: number): Promise<{firstPlayerId: number}
 export async function getCurrentTurn (gameId : number ) : Promise<{
 currentPlayerId: number;
 playerOrder : number;
-direction: number; 
-}> 
+direction: number;
+}>
 {
 const players = await Games.getPlayers(gameId);
 const moveCount = await Moves.getMoveCount(gameId);
@@ -91,23 +101,30 @@ if (players.length === 0) {
 
 }
 
-const sortedPlayers = players.sort((a, b) => a.position - b.position); 
+const sortedPlayers = players.sort((a, b) => a.position - b.position);
 const playerCount = sortedPlayers.length;
 
-let currentTurnIndex = moveCount % playerCount;
+let currentTurn: number;
 
-if ( direction === -1 && moveCount > 0) {
-  currentTurnIndex = (playerCount - currentTurnIndex) % playerCount;
-
-}
-
-const currentPlayerId = sortedPlayers[currentTurnIndex]
-
-return {
-  currentPlayerId: currentPlayerId.user_id, playerOrder: currentPlayerId.position, direction
-}
+if (direction === 1) {
+  currentTurn = moveCount % playerCount;
 
 }
+else{
+  currentTurn = (playerCount - (moveCount % playerCount)) % playerCount;
+}
+
+  const currentId = sortedPlayers[currentTurn];
+  
+  return {
+    currentPlayerId: currentId.user_id, playerOrder: currentId.position || 1, direction
+  }
+  
+}
+
+
+ 
+
 
 export async function endGame(gameId: number, winnerId?: number): Promise<void> {
 

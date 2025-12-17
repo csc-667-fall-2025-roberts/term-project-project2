@@ -366,6 +366,18 @@ body {
 
 .uno-card.clickable:hover {
   transform: scale(1.05);
+  cursor: pointer;
+}
+
+.uno-card.disabled {
+  opacity: 0.6;
+  filter: grayscale(0.3);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.uno-card.disabled:hover {
+  transform: none;
 }
 
 .uno-card.selected {

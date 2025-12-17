@@ -10,7 +10,7 @@
   </title>
 </head>
 
-<body>
+<body data-game-id="<%= id %>" data-user-id="<%= currentUserid %>">
   <!-- Welcome / Game Info -->
   <div class="welcome-container">
     <div class="header">
@@ -70,7 +70,7 @@
 
     <!-- Turn Indicator -->
     <div class="turn-indicator">
-      <div id="turnText" class="turn-text your-turn"> Your Turn</div>
+      <div id="turnText" class="turn-text">Loading...</div>
     </div>
 
 
@@ -263,46 +263,46 @@
         );
       }
 
-      // Click card to select / pop out
-      hand.addEventListener("click", (event) => {
-        const card = event.target.closest(".uno-card.player-card");
-        if (!card) return;
+      // Click card to select / pop out - DISABLED: Now handled by games.ts
+      // hand.addEventListener("click", (event) => {
+      //   const card = event.target.closest(".uno-card.player-card");
+      //   if (!card) return;
 
-        // Clear previous selection
-        document
-          .querySelectorAll(".uno-card.player-card.selected")
-          .forEach((c) => c.classList.remove("selected"));
+      //   // Clear previous selection
+      //   document
+      //     .querySelectorAll(".uno-card.player-card.selected")
+      //     .forEach((c) => c.classList.remove("selected"));
 
-        if (selectedCard === card) {
-          card.classList.remove("selected");
-          selectedCard = null;
-        } else {
-          card.classList.add("selected");
-          selectedCard = card;
-        }
-      });
+      //   if (selectedCard === card) {
+      //     card.classList.remove("selected");
+      //     selectedCard = null;
+      //   } else {
+      //     card.classList.add("selected");
+      //     selectedCard = card;
+      //   }
+      // });
 
-      // Play Card button
-      playButton.addEventListener("click", (event) => {
-        event.preventDefault();
+      // Play Card button - DISABLED: Now handled by games.ts
+      // playButton.addEventListener("click", (event) => {
+      //   event.preventDefault();
 
-        if (!selectedCard) {
-          console.log("[game-animations] no card selected");
-          return;
-        }
+      //   if (!selectedCard) {
+      //     console.log("[game-animations] no card selected");
+      //     return;
+      //   }
 
-        const isWild = selectedCard.classList.contains("card-wild");
+      //   const isWild = selectedCard.classList.contains("card-wild");
 
-        // Wild card will open color picker
-        if (isWild && colorOverlay) {
-          pendingWildCard = selectedCard;
-          colorOverlay.classList.add("active");
-          return;
-        }
+      //   // Wild card will open color picker
+      //   if (isWild && colorOverlay) {
+      //     pendingWildCard = selectedCard;
+      //     colorOverlay.classList.add("active");
+      //     return;
+      //   }
 
-        // Normal card will be play immediately
-        playCardToDiscard(selectedCard);
-      });
+      //   // Normal card will be play immediately
+      //   playCardToDiscard(selectedCard);
+      // });
 
       /*
       // Handle color choice for wild card
@@ -332,78 +332,6 @@
       });
       */
 
-
-      // Draw card from pile
-      if (drawPile) {
-        drawPile.addEventListener("click", () => {
-          if (!hand) return;
-
-          // Determine start position (draw pile)
-          const drawRect = drawPile.getBoundingClientRect();
-          const startX = drawRect.left + drawRect.width / 2;
-          const startY = drawRect.top + drawRect.height / 2;
-
-          // Determine end position (hand area)
-          const handRect = hand.getBoundingClientRect();
-          const endX = handRect.left + handRect.width / 2;
-          const endY = handRect.top + handRect.height / 2;
-
-          const deltaX = endX - startX;
-          const deltaY = endY - startY;
-
-          // Randomly draw card
-          const colors = ["card-red", "card-blue", "card-green", "card-yellow"];
-          const values = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+2", "⟲"];
-
-          const colorClass = colors[Math.floor(Math.random() * colors.length)];
-          const value = values[Math.floor(Math.random() * values.length)];
-
-          // Create clone at draw pile position
-          const flying = document.createElement("div");
-          flying.className = "uno-card player-card " + colorClass + " flying-card";
-          flying.textContent = value;
-
-          const cardWidth = 64;
-          const cardHeight = 96;
-
-          flying.style.left = startX - cardWidth / 2 + "px";
-          flying.style.top = startY - cardHeight / 2 + "px";
-          flying.style.width = cardWidth + "px";
-          flying.style.height = cardHeight + "px";
-          flying.style.transform = "translate(0, 0) scale(0.6)";
-          flying.style.opacity = "0";
-
-          document.body.appendChild(flying);
-
-          // Animate into hand
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              flying.style.transform =
-                "translate(" + deltaX + "px, " + deltaY + "px) scale(1)";
-              flying.style.opacity = "1";
-            });
-          });
-
-          flying.addEventListener(
-            "transitionend",
-            () => {
-              flying.remove();
-
-              // Add the card into the hand
-              const wrapper = document.createElement("div");
-              wrapper.className = "player-card-wrapper";
-
-              const card = document.createElement("div");
-              card.className = "uno-card player-card clickable " + colorClass;
-              card.textContent = value;
-
-              wrapper.appendChild(card);
-              hand.appendChild(wrapper);
-            },
-            { once: true }
-          );
-        });
-      }
     });
 
   </script>

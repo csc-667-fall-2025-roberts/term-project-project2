@@ -6,10 +6,38 @@ import type { DisplayGameCard, User } from "../types/types";
 // we are going to need to make sure we use devs that are in our actual ejs file thes are mostly just placeholders for now im not rlly checking
 
 
+const getCardDisplayValue = (value: string): string => {
+    const valueMap: Record<string, string> = {
+        'skip': '⊘',
+        'reverse': '⟲',
+        'draw_two': '+2',
+        'wild': '★',
+        'wild_draw_four': '+4'
+    };
+    return valueMap[value] || value;
+};
+
+const iscardPlayable = (card: DisplayGameCard, topCard: DisplayGameCard | null): boolean => {
+
+    if (!topCard)  {
+        return false;
+    }
+
+    if (card.color === "wild") {
+        return true;
+    }
+
+    if (card.color === topCard.color || card.value === topCard.value) {
+        return true;
+    }
+
+    return false;
+
+}
+
 
 // also animations will also be added here
-export const renderPlayersHand = async(cards : DisplayGameCard[], topCard : DisplayGameCard | null, myTurn : boolean ) => {
-export const renderPlayersHand = async (cards: DisplayGameCard[]) => {
+export const renderPlayersHand = async(cards : DisplayGameCard[], topCard : DisplayGameCard | null, myTurn : boolean = false ) => {
     const playerHandDiv = document.getElementById(`playerCards`);
     if (!playerHandDiv) {
         console.error(`Player hand div not found`);
@@ -26,24 +54,25 @@ export const renderPlayersHand = async (cards: DisplayGameCard[]) => {
     playerHandDiv.appendChild(templete); 
 
 
-    cards.forEach(card => {
+    cards.forEach((card) => {
         const clone = templete.cloneNode(true) as HTMLElement;
-        clone.style.display = 'inline-block';
+        clone.style.display = 'block';
         const cards = clone.querySelector('.uno-card');
 
         if (cards) {
-            const playable = myTurn && (topCard ? (card.color === topCard.color || card.value === topCard.value || card.color === 'wild') : true);
-            const classes = ['uno-card', `card-${card.color}`, `${playable ? 'playable' : 'not-playable'}`];
+            const playable = myTurn && iscardPlayable(card, topCard);
+            const classes = ['uno-card','player-card', `card-${card.color}`];
+
 
             if (playable) {
-                cards.classList.add('playable');
+                classes.push('clickable');
             } else {
-                cards.classList.add('not-playable');
+                classes.push('disabled');
             }
 
             cards.className = classes.join(' ');
 
-            cards.textContent = card.value;
+            cards.textContent = getCardDisplayValue(card.value) 
 
             cards.setAttribute('data-card-id', card.id.toString());
 
@@ -63,8 +92,6 @@ export const renderPlayersHand = async (cards: DisplayGameCard[]) => {
 
 export const renderDiscardPile = async (cards : DisplayGameCard[]) => {
     const discardPileDiv = document.getElementById('discardCard');
-export const renderDiscardPile = async (cards: DisplayGameCard[]) => {
-    const discardPileDiv = document.getElementById('game-discard');
     if (!discardPileDiv) {
         console.error('Discard pile div not found');
         return;
@@ -74,13 +101,12 @@ export const renderDiscardPile = async (cards: DisplayGameCard[]) => {
         return;
     }
     const topCard = cards[cards.length - 1];
-    const cardDiv = document.createElement('div');
-    cardDiv.className = `uno-card ${topCard.color}`;
-    cardDiv.textContent = topCard.value;
-    cardDiv.setAttribute('data-card-id', topCard.id.toString());
-    discardPileDiv.appendChild(cardDiv);
+    discardPileDiv.className = `uno-card card-${topCard.color}`;
+    discardPileDiv.textContent = getCardDisplayValue(topCard.value) ;
+    discardPileDiv.setAttribute('data-card-id', topCard.id.toString());
 
 };
+
 
 
 export const renderOtherPlayers = async (players: User[], playerHands: Record<number, number>, currentUserId: string, currentPlayerId: number) => {
@@ -92,20 +118,46 @@ export const renderOtherPlayers = async (players: User[], playerHands: Record<nu
 
     otherPlayersDiv.innerHTML = '';
 
-    // filter current player
-    const otherPlayers = players.filter(player => player.id.toString() !== currentUserId);
+    // Find current player's position
+    const currentPlayer = players.find(p => p.id?.toString() === currentUserId);
+    const currentPosition = (currentPlayer as any)?.position || 1;
+    const totalPlayers = players.length;
 
+    // Filter out current player and sort by turn order (relative to current player)
+    const otherPlayers = players
+        .filter(player => player.id?.toString() !== currentUserId)
+        .sort((a, b) => {
+            const posA = (a as any).position || 0;
+            const posB = (b as any).position || 0;
+
+            // Calculate distance from current player in clockwise direction
+            // This ensures players are shown in turn order
+            const distA = (posA - currentPosition + totalPlayers) % totalPlayers;
+            const distB = (posB - currentPosition + totalPlayers) % totalPlayers;
+
+            return distA - distB;
+        });
 
     otherPlayers.forEach(player => {
+        if (!player.id) return; // Skip if player id is undefined
+
         const playerDiv = document.createElement('div');
-        playerDiv.className = 'other-player';
+        playerDiv.className = 'opponent';
         playerDiv.setAttribute('data-player-id', player.id.toString());
+
+        const cardCount = parseInt(playerHands[player.id] as any) || 0;
+        const isActive = player.id === currentPlayerId;
+
+        // Show up to 5 card elements, after that just show the count
+        const displayCount = Math.min(cardCount, 5);
+
         playerDiv.innerHTML = `
-            <div class="player-avatar">
-                <div class="player-name">${player.username}</div>
-                <div class="player-card-count">Cards: ${playerHands[player.id] || 0}</div>
-                <div class="player-turn-indicator ${player.id === currentPlayerId ? 'active' : ''}"></div>
-                <div class="player-position">Position: ${player.id}</div>
+            <div class="opponent-info ${isActive ? 'active-player' : ''}">
+                <div class="opponent-name">${player.username}</div>
+                <div class="opponent-card-count ${isActive ? 'active-turn' : ''}">${cardCount} cards</div>
+            </div>
+            <div class="opponent-hand">
+                ${Array(displayCount).fill('<div class="opponent-card"></div>').join('')}
             </div>
         `;
         otherPlayersDiv.appendChild(playerDiv);
@@ -125,10 +177,10 @@ export const renderTopCard = async (card: DisplayGameCard) => {
     discardCard.textContent = card.value;
 
     // Ensure we always keep the base class + the correct color class
-    // card.color is expected to be like "card-red", "card-blue", etc.
+    // card.color is like "red", "blue", etc., so we need to add "card-" prefix
     const classes = ["uno-card"];
     if (card.color) {
-        classes.push(card.color);
+        classes.push(`card-${card.color}`);
     }
 
     discardCard.className = classes.join(" ");
@@ -138,7 +190,7 @@ export const renderTopCard = async (card: DisplayGameCard) => {
 };
 
 // Update the turn indicator text (#turnText) to show whose turn it is
-export const updateTurnSprite = async (
+export const updateTurnSprite = (
     currentPlayerId: number,
     playerName: string,
     isYourTurn: boolean
@@ -162,7 +214,7 @@ export const updateTurnSprite = async (
 };
 
 // Update the direction arrow (#directionArrow) to show game direction
-export const updateDirectionSprite = async (isClockwise: boolean) => {
+export const updateDirectionSprite = (isClockwise: boolean) => {
     const directionArrow = document.getElementById("directionArrow");
     const directionText = document.getElementById("directionText");
 
@@ -355,39 +407,12 @@ export const showGameNotification = async (message: string, type: 'info' | 'warn
 
 };
 
-// TEMP: expose helpers to the browser console for manual testing -- DELETE LATER -----------
-declare global {
-    interface Window {
-        debugShowWinnerScreen?: (winnerName: string, winnerId: number) => void;
-        debugNotify?: (message: string, type?: "info" | "warning" | "success") => void;
-    }
-}
-
-if (typeof window !== "undefined") {
-    window.debugShowWinnerScreen = showWinnerScreen;
-    window.debugNotify = showGameNotification;
-}
-
-export { }; // keep this so the file is treated as a module
-
-declare global {
-    interface Window {
-        debugColorPicker?: () => Promise<string>;
-    }
-}
-
-if (typeof window !== "undefined") {
-    window.debugColorPicker = showColorSelectionUI;
-}
-
-
-// ------------------------------------------------------------------------------------------
 
 export const updateAllPlayerHandCounts = async (handCounts: Array<{ userId: number; cardCount: number }>, currentUserId: string) => {
     handCounts.forEach(({ userId, cardCount }) => {
-        const playerCardCountElement = document.querySelector(`.other-player[data-player-id="${userId}"] .player-card-count`);
+        const playerCardCountElement = document.querySelector(`.opponent[data-player-id="${userId}"] .opponent-card-count`);
         if (playerCardCountElement) {
-            playerCardCountElement.textContent = `Cards: ${cardCount}`;
+            playerCardCountElement.textContent = `${cardCount} cards`;
         }
 
 
@@ -397,23 +422,6 @@ export const updateAllPlayerHandCounts = async (handCounts: Array<{ userId: numb
     });
 };
 
-declare global {
-    interface Window {
-        renderTopCard?: typeof renderTopCard;
-        updateTurnSprite?: typeof updateTurnSprite;
-        updateDirectionSprite?: typeof updateDirectionSprite;
-        updateHandCount?: typeof updateHandCount;
-        updateDrawPile?: typeof updateDrawPile;
-    }
-}
-
-if (typeof window !== "undefined") {
-    window.renderTopCard = renderTopCard;
-    window.updateTurnSprite = updateTurnSprite;
-    window.updateDirectionSprite = updateDirectionSprite;
-    window.updateHandCount = updateHandCount;
-    window.updateDrawPile = updateDrawPile;
-}
 
 
 

@@ -1,5 +1,5 @@
 import db from "../connection";
-import { CREATE_DECK, DRAW_CARDS, GET_HAND, PLAY_CARD, GET_TOP_Card, GET_HAND_COUNT, GET_DECK_COUNT, DEAL_CARDS }  from "./sql";
+import { CREATE_DECK, DRAW_CARDS, GET_HAND, PLAY_CARD, GET_TOP_Card, GET_HAND_COUNT, GET_DECK_COUNT, DEAL_CARDS, Recycle_Discard_into_Draw_Deck }  from "./sql";
 import { GameCard, DisplayGameCard } from "../../../types/types";
 
  const createDeck = async(game_id: number)=> 
@@ -36,6 +36,10 @@ const getDeckCount = async (game_id: number) => {
   return result.deck_count;
 };
 
+const recycleDiscardPile = async (gameId: number) => {
+  await db.manyOrNone(Recycle_Discard_into_Draw_Deck, [gameId]);
+};
+
 const playerHands = async (gameId: number) => {
   const handCounts = await getHandCount(gameId);
   const result: Record<number, GameCard[]> = {};
@@ -52,4 +56,4 @@ const playerHands = async (gameId: number) => {
   return result;
 };
 
-export { createDeck, drawCards, getHand, playCard, getTopCard, getHandCount, getDeckCount, dealCards, playerHands };
+export { createDeck, drawCards, getHand, playCard, getTopCard, getHandCount, getDeckCount, dealCards, playerHands, recycleDiscardPile };

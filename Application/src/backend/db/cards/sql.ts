@@ -59,13 +59,22 @@ RETURNING *;
 // see whats on top of discard pile 
 
 export const GET_TOP_Card  = `
-SELECT c.id, dc.color, dc.value
+WITH latest_move AS (
+    SELECT card_id, chosen_color
+    FROM moves
+    WHERE game_id = $1 AND card_id IS NOT NULL
+    ORDER BY id DESC
+    LIMIT 1
+)
+SELECT c.id,
+       COALESCE(m.chosen_color, dc.color) as color,
+       dc.value
     FROM cards c
     JOIN deck_cards dc ON c.deck_card_id = dc.id
-    WHERE c.game_id = $1 AND c.location = -1
-    ORDER BY c.id DESC
-    LIMIT 1;
+    JOIN latest_move m ON m.card_id = c.id
+    WHERE c.game_id = $1;
 `;
+
 
 
 
@@ -84,4 +93,27 @@ export const GET_DECK_COUNT = `
 SELECT COUNT(*) as deck_count
 FROM cards
 WHERE game_id = $1 AND owner_id = 0 AND location > 0;
+`;
+
+export const Recycle_Discard_into_Draw_Deck = `
+WITH top_discard AS (
+  SELECT m.card_id
+  FROM moves m
+  WHERE m.game_id = $1
+    AND m.card_id IS NOT NULL
+  ORDER BY m.id DESC
+  LIMIT 1
+),
+to_recycle AS (
+  SELECT c.id AS card_id
+  FROM cards c
+  WHERE c.game_id = $1
+    AND c.pile = 'DISCARD'
+    AND c.id <> (SELECT card_id FROM top_discard)
+)
+UPDATE cards c
+SET pile = 'DRAW'
+FROM to_recycle r
+WHERE c.id = r.card_id
+RETURNING c.id;
 `;

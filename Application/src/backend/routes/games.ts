@@ -8,6 +8,7 @@ import { playACard, drawCards, endTurn } from "../services/moveService";
 import { broadcastJoin, broadcastGameStart, broadcastGameStateUpdate } from "../sockets/pre-game-sockets";
 import { broadcastTurnChange, broadcastCardPlay, broadcastDraw, broadcastHandUpdate, broadcastGameEnd, broadcastSkip, broadcastReverse, broadcastColorChosen } from "../sockets/gameplay-socket";
 import { GameState } from "../../types/types";
+import { constants } from "fs/promises";
 
 const router = express.Router();
 
@@ -156,20 +157,34 @@ router.post("/:game_id/play", async (request, response) => {
 
     const io = request.app.get("io") as Server;
 
-    broadcastCardPlay(io, gameId, userId, username, { id: card!.id, color: chosenColor || card!.color, value: card!.value });
+    const actualTopCard = await Cards.getTopCard(gameId);
+
+    const cardToBroadcast = actualTopCard || { id: card!.id, color: chosenColor || card!.color, value: card!.value };
+
+    logger.info(`[play route] Broadcasting card: ${cardToBroadcast.color} ${cardToBroadcast.value}`);
+
+
+    broadcastCardPlay(io, gameId, userId, username,cardToBroadcast); 
 
     // Get turn info for special card effects
     const turnInfo = await getCurrentTurn(gameId);
 
+    const players = await Games.getPlayers(gameId);
+
     // Handle special card effects
     if (card!.value === 'skip') {
-      const players = await Games.getPlayers(gameId);
       const skipped = players.find(p => p.user_id === turnInfo.currentPlayerId);
       broadcastSkip(io, gameId, turnInfo.currentPlayerId, skipped?.username || 'Unknown');
     }
     if (card!.value === 'reverse') {
       broadcastReverse(io, gameId, turnInfo.direction);
     }
+    if (card!.value === 'draw_two' || card!.value === 'wild_draw_four') {
+      const drawCount = card!.value === 'draw_two' ? 2 : 4;
+      const nextPlayerId = players.find(p => p.user_id === turnInfo.currentPlayerId);
+      broadcastDraw(io, gameId, turnInfo.currentPlayerId, nextPlayerId?.username || 'Unknown', drawCount);
+    }
+
     if ((card!.value === 'wild' || card!.value === 'wild_draw_four') && chosenColor) {
       broadcastColorChosen(io, gameId, userId, username, chosenColor);
     }
@@ -246,5 +261,46 @@ router.get("/:game_id/player_hand", async (request, response) => {
   const myCards = card_data.map((c) => ({ id: c.id, color: c.color, value: c.value}));
   response.status(200).json({ hand: myCards });
 });
+
+router.get("/:game_id/players", async (request, response) => {
+  try {
+    const gameId = parseInt(request.params.game_id);
+    const players = await Games.getPlayers(gameId);
+    const handCounts = await Cards.getHandCount(gameId);
+
+    const formattedPlayers = players.map(p => {
+      const handCount = handCounts.find(hc => hc.owner_id === p.user_id);
+      return {
+        id: p.user_id,
+        username: p.username,
+        position: p.position,
+        isReady: p.is_ready,
+        cardCount: handCount ? handCount.hand_count : 0
+      };
+    });
+
+    response.status(200).json({ players: formattedPlayers });
+  } catch (error: any) {
+    logger.error("Error getting players:", error);
+    response.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/:game_id/discard_pile", async (request, response) => {
+  try {
+    const gameId = parseInt(request.params.game_id);
+    const topCard = await Cards.getTopCard(gameId);
+    const discardPile = topCard ? [topCard] : [];
+
+    response.status(200).json({ discardPile });
+  } catch (error: any) {
+    logger.error("Error getting discard pile:", error);
+    response.status(500).json({ error: error.message });
+  }
+});
+
+
+
+
 
 export default router;
