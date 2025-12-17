@@ -113,6 +113,18 @@ export async function playACard(
 
     const turnInfo = await getCurrentTurn(gameId);
     const nextPlayerId = turnInfo.currentPlayerId;
+
+    // Check if we need to recycle the discard pile before drawing
+    let deckCount = await GameCards.getDeckCount(gameId);
+    if(deckCount < drawCount){
+      await GameCards.recycleDiscardPile(gameId);
+      deckCount = await GameCards.getDeckCount(gameId);
+
+      if(deckCount < drawCount){
+        throw new Error("Not enough cards in deck even after recycling discard pile");
+      }
+    }
+
     await GameCards.drawCards(gameId, nextPlayerId, drawCount);
 
     await Moves.createMove(
@@ -169,9 +181,16 @@ export async function drawCards(
 
 
   let deckCount = await GameCards.getDeckCount(gameId);
-  
+
+  // If not enough cards in deck, recycle the discard pile (keeping top card)
   if(deckCount < drawCount){
-    throw new Error("Not enough cards in deck");
+    await GameCards.recycleDiscardPile(gameId);
+    deckCount = await GameCards.getDeckCount(gameId);
+
+    // If still not enough cards after recycling, throw error
+    if(deckCount < drawCount){
+      throw new Error("Not enough cards in deck even after recycling discard pile");
+    }
   }
 
   const drawnCards = await GameCards.drawCards(gameId, userId, drawCount);

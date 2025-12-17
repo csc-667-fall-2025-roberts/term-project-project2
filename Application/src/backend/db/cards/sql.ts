@@ -1,12 +1,53 @@
 // deck and card sql queries.
 
 
-// create shuffled deck for a game
+// create deck 
 export const CREATE_DECK = `
+WITH full_deck AS (
+  
+  SELECT id
+  FROM deck_cards
+  WHERE value = '0' AND color != 'wild'
+
+  UNION ALL
+
+  -- 1-9 (two per color)
+  SELECT dc.id
+  FROM deck_cards dc
+  JOIN generate_series(1,2) gs ON true
+  WHERE dc.value IN ('1','2','3','4','5','6','7','8','9')
+    AND dc.color != 'wild'
+
+  UNION ALL
+
+
+  SELECT dc.id
+  FROM deck_cards dc
+  JOIN generate_series(1,2) gs ON true
+  WHERE dc.value IN ('skip','reverse','draw_two')
+    AND dc.color != 'wild'
+
+  UNION ALL
+
+  -- wild (4 copies)
+  SELECT dc.id
+  FROM deck_cards dc
+  JOIN generate_series(1,4) gs ON true
+  WHERE dc.value = 'wild' AND dc.color = 'wild'
+
+  UNION ALL
+
+
+  SELECT dc.id
+  FROM deck_cards dc
+  JOIN generate_series(1,4) gs ON true
+  WHERE dc.value = 'wild_draw_four' AND dc.color = 'wild'
+)
 INSERT INTO cards (game_id, deck_card_id, owner_id, location)
 SELECT $1, id, 0, ROW_NUMBER() OVER (ORDER BY RANDOM())
-FROM deck_cards;
+FROM full_deck;
 `;
+
 
 // get a certain number of cards from the deck.
 
@@ -108,11 +149,14 @@ to_recycle AS (
   SELECT c.id AS card_id
   FROM cards c
   WHERE c.game_id = $1
-    AND c.pile = 'DISCARD'
+    AND c.owner_id = 0
+    AND c.location = -1
     AND c.id <> (SELECT card_id FROM top_discard)
 )
 UPDATE cards c
-SET pile = 'DRAW'
+SET location = (SELECT COALESCE(MAX(location), 0) + ROW_NUMBER() OVER (ORDER BY RANDOM())
+                FROM cards
+                WHERE game_id = $1 AND owner_id = 0 AND location > 0)
 FROM to_recycle r
 WHERE c.id = r.card_id
 RETURNING c.id;

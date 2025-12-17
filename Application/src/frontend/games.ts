@@ -99,15 +99,32 @@ socket.on(CARD_PLAY, (data: { gameId: number; userId: number; username: string; 
 });
 
 
-socket.on( PLAYER_HAND_UPDATE, (data: { gameId: number; handCounts: Array<{ userId: number; cardCount: number }> } ) => {
+socket.on( PLAYER_HAND_UPDATE, async (data: { gameId: number; handCounts: Array<{ userId: number; cardCount: number }> } ) => {
     console.log("Player hand updated:", data);
-    updateAllPlayerHandCounts(data.handCounts, currentUserId);
 
     // Update the visual representation of other players
     const handCountsMap = Object.fromEntries(
         data.handCounts.map(({ userId, cardCount }) => [userId, cardCount])
     );
     renderOtherPlayers(players, handCountsMap, currentUserId, currentPlayerId);
+
+    // Update current player's hand count and re-fetch hand if needed
+    const currentUserHandData = data.handCounts.find(hc => hc.userId.toString() === currentUserId);
+    if (currentUserHandData) {
+        updateHandCount(currentUserHandData.cardCount);
+
+        // Re-fetch and re-render current player's hand to show new cards
+        const response = await fetch(`/games/${gameId}/player_hand`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+        });
+        const playerHand = await response.json();
+        myhand = playerHand.hand;
+        renderPlayersHand(myhand, topDiscardCard, myTurn);
+    }
 });
 
 
