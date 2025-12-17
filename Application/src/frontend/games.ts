@@ -71,15 +71,11 @@ socket.on(TURN_CHANGE, async (turnData: { currentPlayerId: number, turnDirection
     // Re-render hand to update card clickability
     renderPlayersHand(myhand, topDiscardCard, myTurn);
 
-    // Extract hand counts from existing players data
-    const playerHandCount: Record<number, number> = {};
-    players.forEach((p: any) => {
-        if (p.id) {
-            playerHandCount[p.id] = p.cardCount || 0;
-        }
-    });
-
-    renderOtherPlayers(players, playerHandCount, currentUserId, currentPlayerId);
+    // Update active player highlighting with current hand counts from synced players array
+    const handCounts = Object.fromEntries(
+        players.map((p: any) => [p.id, p.cardCount || 0])
+    );
+    renderOtherPlayers(players, handCounts, currentUserId, currentPlayerId);
 
     if (myTurn){
         showGameNotification("It's your turn!", 'info');
@@ -100,17 +96,30 @@ socket.on(CARD_PLAY, (data: { gameId: number; userId: number; username: string; 
 
 
 socket.on( PLAYER_HAND_UPDATE, async (data: { gameId: number; handCounts: Array<{ userId: number; cardCount: number }> } ) => {
-    console.log("Player hand updated:", data);
+    console.log("[PLAYER_HAND_UPDATE] Received:", data);
+    console.log("[PLAYER_HAND_UPDATE] Current players array:", players);
+    console.log("[PLAYER_HAND_UPDATE] Current userId:", currentUserId);
+    console.log("[PLAYER_HAND_UPDATE] Current playerId:", currentPlayerId);
 
     // Update the visual representation of other players
     const handCountsMap = Object.fromEntries(
         data.handCounts.map(({ userId, cardCount }) => [userId, cardCount])
     );
+    console.log("[PLAYER_HAND_UPDATE] Hand counts map:", handCountsMap);
+
+    // Update players array with new card counts to keep it in sync
+    players.forEach(p => {
+        if (p.id && handCountsMap[p.id] !== undefined) {
+            (p as any).cardCount = handCountsMap[p.id];
+        }
+    });
+
     renderOtherPlayers(players, handCountsMap, currentUserId, currentPlayerId);
 
     // Update current player's hand count and re-fetch hand if needed
     const currentUserHandData = data.handCounts.find(hc => hc.userId.toString() === currentUserId);
     if (currentUserHandData) {
+        console.log("[PLAYER_HAND_UPDATE] Updating current user hand, count:", currentUserHandData.cardCount);
         updateHandCount(currentUserHandData.cardCount);
 
         // Re-fetch and re-render current player's hand to show new cards

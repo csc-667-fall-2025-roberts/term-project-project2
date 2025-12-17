@@ -146,6 +146,8 @@ export const renderOtherPlayers = async (players: User[], playerHands: Record<nu
         playerDiv.setAttribute('data-player-id', player.id.toString());
 
         const cardCount = parseInt(playerHands[player.id] as any) || 0;
+        console.log(`[renderOtherPlayers] Rendering player ${player.id} (${player.username}): playerHands[${player.id}] = ${playerHands[player.id]}, cardCount = ${cardCount}`);
+
         const isActive = player.id === currentPlayerId;
 
         // Show up to 5 card elements, after that just show the count
@@ -161,6 +163,7 @@ export const renderOtherPlayers = async (players: User[], playerHands: Record<nu
             </div>
         `;
         otherPlayersDiv.appendChild(playerDiv);
+        console.log(`[renderOtherPlayers] Appended opponent div for player ${player.id}`);
     });
 };
 
