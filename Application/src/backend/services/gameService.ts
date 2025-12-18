@@ -94,6 +94,7 @@ direction: number;
 const players = await Games.getPlayers(gameId);
 const moveCount = await Moves.getMoveCount(gameId);
 const direction = await Moves.getTurnDirection(gameId);
+const lastMove = await Moves.getLastMove(gameId);
 
 
 if (players.length === 0) {
@@ -106,19 +107,25 @@ const playerCount = sortedPlayers.length;
 
 let currentTurn: number;
 
-if (direction === 1) {
-  currentTurn = moveCount % playerCount;
-
-}
-else{
-  currentTurn = (playerCount - (moveCount % playerCount)) % playerCount;
-}
-
-  const currentId = sortedPlayers[currentTurn];
+if (playerCount === 2) {
   
-  return {
-    currentPlayerId: currentId.user_id, playerOrder: currentId.position || 1, direction
+  currentTurn = moveCount % playerCount;
+} else {
+  
+  if (direction === 1) {
+ 
+    currentTurn = moveCount % playerCount;
+  } else {
+   
+    currentTurn = (playerCount - (moveCount % playerCount)) % playerCount;
   }
+}
+
+const currentId = sortedPlayers[currentTurn];
+
+return {
+  currentPlayerId: currentId.user_id, playerOrder: currentId.position || 1, direction
+}
   
 }
 

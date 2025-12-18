@@ -108,6 +108,14 @@ export async function playACard(
     await Moves.createMove(gameId, userId, 'skip', undefined, undefined, undefined, false);
   }
 
+  // In 2-player game, reverse acts like skip
+  if(isReverse){
+    const players = await Games.getPlayers(gameId);
+    if(players.length === 2){
+      await Moves.createMove(gameId, userId, 'skip', undefined, undefined, undefined, false);
+    }
+  }
+
   if(isDraw2 || isWildDraw4){
     const drawCount = isDraw2 ? 2 : 4;
 
