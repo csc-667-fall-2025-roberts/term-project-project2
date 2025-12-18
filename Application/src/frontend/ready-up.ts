@@ -8,6 +8,7 @@ const socket = socketIO( {query: { gameId: gameId.toString()}});
 let currentUserId: number;
 let capacity: number;
 let players: GamePlayer[] = [];
+let startGameVisible = false;
 
 const playersList = document.querySelector<HTMLUListElement>("#playersGrid")!;
 const readyButton = document.querySelector<HTMLButtonElement>("#readyButton")!;
@@ -95,7 +96,25 @@ const updateReadyStatus = () => {
     
     // Show start game button if: host + at least 2 players ready (including host)
     const canStartGame = isHost && readyCount >= 2 && players.length >= 2;
-    startGameButton.style.display = canStartGame ? "block" : "none";
+    // startGameButton.style.display = canStartGame ? "block" : "none";
+    if (canStartGame) {
+        // pop-in only happens when the start game is visible
+        if (!startGameVisible) {
+          startGameButton.style.display = "block";
+    
+          // restart animation if class was there before
+          startGameButton.classList.remove("pop-in");
+          void startGameButton.offsetWidth; 
+          startGameButton.classList.add("pop-in");
+    
+          startGameVisible = true;
+        } else {
+          startGameButton.style.display = "block";
+        }
+      } else {
+        startGameButton.style.display = "none";
+        startGameVisible = false;
+      }
 };
 
 socket.on(EVENTS.PLAYER_JOINED, (data: { gameId: number; userId: number; username: string }) => {
