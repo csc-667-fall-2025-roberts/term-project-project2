@@ -37,8 +37,11 @@ FROM moves
 WHERE game_id = $1
 `;
 
-// Get move count for a game
+// Get move count for a game 
 export const GET_MOVE_COUNT = `
-SELECT COUNT(*) as count FROM moves WHERE game_id = $1
+SELECT COUNT(*) as count
+FROM moves
+WHERE game_id = $1
+AND play_type IN ('play', 'reverse')
 `;
 
