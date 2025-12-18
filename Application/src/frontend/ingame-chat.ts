@@ -3,6 +3,9 @@ import socketIo from "socket.io-client";
 import type { ChatMessage } from "../types/types";
 import * as chatKeys from "../shared/keys";
 
+// Extract game_id from body dataset
+const gameId = document.body.dataset.gameId || "";
+
 const gameChatWindow = document.querySelector<HTMLDivElement>("#gameChatWindow");
 const gameChatToggle = document.querySelector<HTMLButtonElement>("#gameChatToggle");
 const gameChatClose = document.querySelector<HTMLButtonElement>("#gameChatClose");
@@ -10,7 +13,8 @@ const gameChatMessages = document.querySelector<HTMLDivElement>("#gameChatMessag
 const gameChatForm = document.querySelector<HTMLFormElement>("#gameChatForm");
 const gameChatInput = document.querySelector<HTMLInputElement>("#gameChatInput");
 
-const gameChatSocket = socketIo();
+// Connect socket to game room
+const gameChatSocket = socketIo({ query: { gameId } });
 
 const getUserIdFromPage = (): number => {
   const userInfoText = document.querySelector(".user-info")?.textContent || "";
@@ -78,7 +82,10 @@ const sendGameChatMessage = () => {
   const text = gameChatInput.value.trim();
   if (!text.length) return;
 
-  const body = JSON.stringify({ message: text });
+  const body = JSON.stringify({
+    message: text,
+    game_id: gameId ? parseInt(gameId) : undefined
+  });
 
   fetch("/chat/", {
     method: "post",
@@ -116,8 +123,10 @@ gameChatClose?.addEventListener("click", () => {
 });
 
 gameChatSocket.on("connect", () => {
-  fetch("/chat/", {
-    method: "get",
-    credentials: "include",
-  });
+  if (gameId) {
+    fetch(`/chat/?game_id=${gameId}`, {
+      method: "get",
+      credentials: "include",
+    });
+  }
 });

@@ -173,8 +173,18 @@ router.post("/:game_id/play", async (request, response) => {
 
     // Handle special card effects
     if (card!.value === 'skip') {
-      const skipped = players.find(p => p.user_id === turnInfo.currentPlayerId);
-      broadcastSkip(io, gameId, turnInfo.currentPlayerId, skipped?.username || 'Unknown');
+      // The skipped player is one position back from current player
+      const sortedPlayers = players.sort((a, b) => a.position - b.position);
+      
+      const currentPlayerIndex = sortedPlayers.findIndex(p => p.user_id === turnInfo.currentPlayerId);
+      
+      
+      const skippedPlayerIndex = turnInfo.direction === 1
+        ? (currentPlayerIndex - 1 + sortedPlayers.length) % sortedPlayers.length
+        : (currentPlayerIndex + 1) % sortedPlayers.length;
+
+      const skipped = sortedPlayers[skippedPlayerIndex];
+      broadcastSkip(io, gameId, skipped.user_id, skipped.username);
     }
     if (card!.value === 'reverse') {
       broadcastReverse(io, gameId, turnInfo.direction);
@@ -273,6 +283,7 @@ router.get("/:game_id/players", async (request, response) => {
       return {
         id: p.user_id,
         username: p.username,
+        display_name: p.display_name,
         position: p.position,
         isReady: p.is_ready,
         cardCount: handCount ? handCount.hand_count : 0

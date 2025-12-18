@@ -153,9 +153,11 @@ export const renderOtherPlayers = async (players: User[], playerHands: Record<nu
         // Show up to 5 card elements, after that just show the count
         const displayCount = Math.min(cardCount, 5);
 
+        const displayName = player.display_name || player.username || `Player ${player.id}`;
+
         playerDiv.innerHTML = `
             <div class="opponent-info ${isActive ? 'active-player' : ''}">
-                <div class="opponent-name">${player.username}</div>
+                <div class="opponent-name">${displayName}</div>
                 <div class="opponent-card-count ${isActive ? 'active-turn' : ''}">${cardCount} cards</div>
             </div>
             <div class="opponent-hand">

@@ -5,8 +5,8 @@ RETURNING *
 `;
 
 export const JOIN_GAME = `
-INSERT INTO "gameParticipants" (game_id, user_id, player_order)
-VALUES ($1, $2, (SELECT COALESCE(MAX(player_order), 0) + 1 FROM "gameParticipants" WHERE game_id = $1))
+INSERT INTO "gameParticipants" (game_id, user_id, player_order, joined_at)
+VALUES ($1, $2, (SELECT COALESCE(MAX(player_order), 0) + 1 FROM "gameParticipants" WHERE game_id = $1), CURRENT_TIMESTAMP)
 `;
 
 export const LIST_GAMES = `
