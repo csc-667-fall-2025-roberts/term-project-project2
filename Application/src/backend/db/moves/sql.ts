@@ -37,11 +37,11 @@ FROM moves
 WHERE game_id = $1
 `;
 
-// Get move count for a game 
+// Get move count for a game (only count actual card plays, not auxiliary skip/draw moves)
 export const GET_MOVE_COUNT = `
 SELECT COUNT(*) as count
 FROM moves
 WHERE game_id = $1
-AND play_type IN ('play', 'reverse', 'skip')
+AND card_id IS NOT NULL
 `;
 
