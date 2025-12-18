@@ -42,6 +42,6 @@ export const GET_MOVE_COUNT = `
 SELECT COUNT(*) as count
 FROM moves
 WHERE game_id = $1
-AND play_type IN ('play', 'reverse')
+AND play_type IN ('play', 'reverse', 'skip')
 `;
 
