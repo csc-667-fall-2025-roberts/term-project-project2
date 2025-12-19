@@ -2,6 +2,7 @@ import express from "express";
 import { Server } from "socket.io";
 import { GAME_CREATE,GAME_LISTING } from "../../shared/keys";
 import { Games, Cards } from "../db";
+import * as Moves from "../db/moves";
 import logger from "../lib/logger";
 import { StartGame, getCurrentTurn, endGame } from "../services/gameService";
 import { playACard, drawCards, endTurn } from "../services/moveService";
@@ -155,6 +156,10 @@ router.post("/:game_id/play", async (request, response) => {
     const playerHand = await Cards.getHand(gameId, userId);
     const card = playerHand.find(c => c.id === cardId);
 
+  
+    const directionBeforeCard = await Moves.getTurnDirection(gameId);
+    console.log(`[play route] Direction before card: ${directionBeforeCard}`);
+
     const result = await playACard(gameId, userId, cardId, chosenColor);
 
     if (!result.success) {
@@ -172,33 +177,44 @@ router.post("/:game_id/play", async (request, response) => {
 
     broadcastCardPlay(io, gameId, userId, username,cardToBroadcast); 
 
-    // Get turn info for special card effects
+    // Get turn info for special card effects (AFTER the card is played)
     const turnInfo = await getCurrentTurn(gameId);
 
     const players = await Games.getPlayers(gameId);
 
     // Handle special card effects
     if (card!.value === 'skip') {
-      // The skipped player is one position back from current player
+      // Use direction BEFORE card was played to find who was skipped
       const sortedPlayers = players.sort((a, b) => a.position - b.position);
       
-      const currentPlayerIndex = sortedPlayers.findIndex(p => p.user_id === turnInfo.currentPlayerId);
+      const cardPlayerIndex = sortedPlayers.findIndex(p => p.user_id === userId);
       
-      
-      const skippedPlayerIndex = turnInfo.direction === 1
-        ? (currentPlayerIndex - 1 + sortedPlayers.length) % sortedPlayers.length
-        : (currentPlayerIndex + 1) % sortedPlayers.length;
+      // Player who got skipped is one step from card player in OLD direction of play
+      const skippedPlayerIndex = directionBeforeCard === 1
+        ? (cardPlayerIndex + 1) % sortedPlayers.length
+        : (cardPlayerIndex - 1 + sortedPlayers.length) % sortedPlayers.length;
 
       const skipped = sortedPlayers[skippedPlayerIndex];
+      console.log(`[skip broadcast] Card player: ${userId}, Skipped: ${skipped.user_id}, Direction before: ${directionBeforeCard}`);
       broadcastSkip(io, gameId, skipped.user_id, skipped.username);
     }
     if (card!.value === 'reverse') {
+      // Broadcast uses the NEW direction (after reverse)
       broadcastReverse(io, gameId, turnInfo.direction);
     }
     if (card!.value === 'draw_two' || card!.value === 'wild_draw_four') {
       const drawCount = card!.value === 'draw_two' ? 2 : 4;
-      const nextPlayerId = players.find(p => p.user_id === turnInfo.currentPlayerId);
-      broadcastDraw(io, gameId, turnInfo.currentPlayerId, nextPlayerId?.username || 'Unknown', drawCount);
+      
+      // Use direction BEFORE card was played to find who drew
+      const sortedPlayers = players.sort((a, b) => a.position - b.position);
+      const cardPlayerIndex = sortedPlayers.findIndex(p => p.user_id === userId);
+      const drawnPlayerIndex = directionBeforeCard === 1
+        ? (cardPlayerIndex + 1) % sortedPlayers.length
+        : (cardPlayerIndex - 1 + sortedPlayers.length) % sortedPlayers.length;
+      
+      const drawnPlayer = sortedPlayers[drawnPlayerIndex];
+      console.log(`[draw broadcast] Card player: ${userId}, Drew player: ${drawnPlayer.user_id}, Drew ${drawCount} cards, Direction before: ${directionBeforeCard}`);
+      broadcastDraw(io, gameId, drawnPlayer.user_id, drawnPlayer.username, drawCount);
     }
 
     if ((card!.value === 'wild' || card!.value === 'wild_draw_four') && chosenColor) {

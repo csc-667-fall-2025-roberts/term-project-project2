@@ -37,8 +37,14 @@ FROM moves
 WHERE game_id = $1
 `;
 
-// Get move count for a game
 export const GET_MOVE_COUNT = `
-SELECT COUNT(*) as count FROM moves WHERE game_id = $1
+SELECT COUNT(*) as count
+FROM moves
+WHERE game_id = $1
+AND (
+  card_id IS NOT NULL
+  OR play_type = 'skip'
+  OR (play_type = 'draw' AND draw_amount IS NULL)
+)
 `;
 

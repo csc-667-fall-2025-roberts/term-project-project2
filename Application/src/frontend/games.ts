@@ -62,7 +62,7 @@ socket.on(TURN_CHANGE, async (turnData: { currentPlayerId: number, turnDirection
 
 
     const currentPlayer = players.find(p => p.id === currentPlayerId);
-    const playerName = currentPlayer ? currentPlayer.username : `Player ${currentPlayerId}`;
+    const playerName = currentPlayer ? (currentPlayer.display_name || currentPlayer.username) : `Player ${currentPlayerId}`;
 
     updateTurnSprite(currentPlayerId, playerName, myTurn);
 
@@ -288,7 +288,8 @@ const initGame = async () => {
     );
 
     renderOtherPlayers(players, handCounts, currentUserId, currentPlayerId);
-    updateTurnSprite(currentPlayerId, players.find(p => p.id === currentPlayerId) ?.username || '', myTurn);
+    const currentPlayerData = players.find(p => p.id === currentPlayerId);
+    updateTurnSprite(currentPlayerId, currentPlayerData?.display_name || currentPlayerData?.username || '', myTurn);
     updateDirectionSprite(isClockwise);
     updateDrawPile(108 - myhand.length);
 
@@ -307,7 +308,7 @@ const updateTurn = async () => {
     myTurn = currentPlayerId === parseInt(currentUserId);
 
     const currentPlayer = players.find(p => p.id === currentPlayerId);
-    const playerName = currentPlayer ? currentPlayer.username : `Player ${currentPlayerId}`;
+    const playerName = currentPlayer ? (currentPlayer.display_name || currentPlayer.username) : `Player ${currentPlayerId}`;
 
     updateTurnSprite(currentPlayerId, playerName, myTurn);
     updateDirectionSprite(isClockwise);
