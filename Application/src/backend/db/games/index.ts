@@ -54,9 +54,24 @@ const getCurrentPlayer= async (game_id: number) => {
   return result;
 };
 
+const rejoinableGame = async (user_id: number) => {
+  const game = await getByUser(user_id);
+
+  const in_progress = game.filter((g) => g.state === GameState.IN_PROGRESS);
+
+  if (in_progress.length === 0) {
+    return null;
+  }
+
+  in_progress.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+  return in_progress[0];
+}
+
 export {create,get,getByUser,join,list,getPlayers,setPlayerPosition,startGame,updateGame,leaveGame,
   getPlayerCount,
   checkPlayerInGame,
   togglePlayerReady,
   getCurrentPlayer,
+  rejoinableGame
 };

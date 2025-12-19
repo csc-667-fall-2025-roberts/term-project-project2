@@ -85,14 +85,19 @@ export async function playACard(
     return { success: false, message: "Failed to play card" };
   }
 
+  const players = await Games.getPlayers(gameId);
+  const playerCount = players.length;
+
   const isReverse = card.value === "reverse";
   const isSkip = card.value === "skip";
   const isDraw2 = card.value === "draw_two";
   const isWildDraw4 = card.value === "wild_draw_four";
 
+  const treatReverseAsSkip = isReverse && playerCount === 2;
+
   let playType: 'play' | 'draw' | 'skip' | 'reverse' = 'play';
-  if(isReverse) playType = 'reverse';
-  if(isSkip) playType = 'skip';
+  if(isReverse && !treatReverseAsSkip) playType = 'reverse';
+  if(isSkip || treatReverseAsSkip) playType = 'skip';
 
   await Moves.createMove(
     gameId,
@@ -101,10 +106,10 @@ export async function playACard(
     cardId,
     isDraw2 ? 2 : isWildDraw4 ? 4 : undefined,
     chosenColor,
-    isReverse
+    isReverse && !treatReverseAsSkip
   );
 
-  if(isSkip){
+  if(isSkip || treatReverseAsSkip){
     await Moves.createMove(gameId, userId, 'skip', undefined, undefined, undefined, false);
   }
 

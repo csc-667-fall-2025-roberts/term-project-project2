@@ -38,7 +38,13 @@ router.post("/", async (request, response) => {
     const { id } = request.session.user!;
     const { name, max_players } = request.body;
 
-    const maxPlayers = max_players ? parseInt(max_players) : 4;
+    let maxPlayers = max_players ? parseInt(max_players) : 4;
+
+    // Enforce maximum of 4 players
+    if (maxPlayers > 4) {
+      maxPlayers = 4;
+    }
+
     logger.info(`Create game request ${name}, ${maxPlayers} by ${id}`);
     const game = await Games.create(id, name, maxPlayers);
     logger.info(`Game created: ${game.id}`);
@@ -234,6 +240,11 @@ router.post("/:game_id/draw", async (request, response) => {
 
     const handCounts = await Cards.getHandCount(gameId);
     broadcastHandUpdate(io, gameId, handCounts);
+
+    // End turn after drawing
+    await endTurn(gameId, userId);
+    const turnInfo = await getCurrentTurn(gameId);
+    broadcastTurnChange(io, gameId, turnInfo.currentPlayerId, turnInfo.direction, turnInfo.playerOrder);
 
     response.status(200).json({
       message: "Cards were drawn successfully",
