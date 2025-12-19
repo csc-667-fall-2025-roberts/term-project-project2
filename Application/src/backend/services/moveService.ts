@@ -177,7 +177,7 @@ export async function drawCards(
 
   const lastMove = await Moves.getLastMove(gameId);
 
-  const drawAmount = lastMove && (lastMove.draw_count && lastMove.owner_id === userId)
+  const drawAmount = lastMove && lastMove.draw_count && lastMove.move_type !== 'draw' && lastMove.owner_id !== userId
     ? lastMove.draw_count : 0;
 
   const drawCount = drawAmount > 0 ? drawAmount : (count || 1);

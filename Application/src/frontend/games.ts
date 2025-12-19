@@ -10,7 +10,9 @@ import {
     SKIP,
     ERROR,
     PLAYER_HAND_UPDATE,
-    CARD_DEAL
+    CARD_DEAL,
+    PLAYER_JOINED,
+    PLAYER_LEFT
 } from "../shared/keys";
 
 // Import UI rendering functions
@@ -48,14 +50,12 @@ let topDiscardCard: DisplayGameCard | null = null;
 
 // Socket Event Listeners
 
-socket.on(GAME_STATE_UPDATE, (data: { gameId: number; state: string }) => {
-    console.log("Game state updated:", data);
-  
+socket.on(GAME_STATE_UPDATE, () => {
+
 });
 
 
 socket.on(TURN_CHANGE, async (turnData: { currentPlayerId: number, turnDirection: number, player_order: number, gameId: number }) => {
-    console.log("Turn changed:", turnData);
     currentPlayerId = turnData.currentPlayerId;
     isClockwise = turnData.turnDirection === 1;
     myTurn = currentPlayerId === parseInt(currentUserId);
@@ -86,7 +86,6 @@ socket.on(TURN_CHANGE, async (turnData: { currentPlayerId: number, turnDirection
 
 
 socket.on(CARD_PLAY, (data: { gameId: number; userId: number; username: string; card: DisplayGameCard }) => {
-    console.log("Card played:", data);
     topDiscardCard = data.card;
     renderDiscardPile([data.card]);
 
@@ -96,16 +95,9 @@ socket.on(CARD_PLAY, (data: { gameId: number; userId: number; username: string; 
 
 
 socket.on( PLAYER_HAND_UPDATE, async (data: { gameId: number; handCounts: Array<{ userId: number; cardCount: number }> } ) => {
-    console.log("[PLAYER_HAND_UPDATE] Received:", data);
-    console.log("[PLAYER_HAND_UPDATE] Current players array:", players);
-    console.log("[PLAYER_HAND_UPDATE] Current userId:", currentUserId);
-    console.log("[PLAYER_HAND_UPDATE] Current playerId:", currentPlayerId);
-
-    // Update the visual representation of other players
     const handCountsMap = Object.fromEntries(
         data.handCounts.map(({ userId, cardCount }) => [userId, cardCount])
     );
-    console.log("[PLAYER_HAND_UPDATE] Hand counts map:", handCountsMap);
 
     // Update players array with new card counts to keep it in sync
     players.forEach(p => {
@@ -116,10 +108,8 @@ socket.on( PLAYER_HAND_UPDATE, async (data: { gameId: number; handCounts: Array<
 
     renderOtherPlayers(players, handCountsMap, currentUserId, currentPlayerId);
 
-    // Update current player's hand count and re-fetch hand if needed
     const currentUserHandData = data.handCounts.find(hc => hc.userId.toString() === currentUserId);
     if (currentUserHandData) {
-        console.log("[PLAYER_HAND_UPDATE] Updating current user hand, count:", currentUserHandData.cardCount);
         updateHandCount(currentUserHandData.cardCount);
 
         // Re-fetch and re-render current player's hand to show new cards
@@ -137,10 +127,8 @@ socket.on( PLAYER_HAND_UPDATE, async (data: { gameId: number; handCounts: Array<
 });
 
 
-socket.on(CARD_DEAL, (data: { gameId: number; cards: DisplayGameCard[] }) => { 
-    console.log("Cards dealt:", data);
+socket.on(CARD_DEAL, (data: { gameId: number; cards: DisplayGameCard[] }) => {
     if (data.gameId.toString() !== gameId) {
-        console.error("invalid game ID" ); 
         return;
     }
 
@@ -151,7 +139,6 @@ socket.on(CARD_DEAL, (data: { gameId: number; cards: DisplayGameCard[] }) => {
 } );
 
 socket.on(CARD_DRAW_COMPLETED, async (data: { gameId: number; userId: number; username: string; count: number}) => {
-    console.log("Card drawn:", data);
     const isCurrentUser = data.userId.toString() === currentUserId;
     updateDrawPile(data.count);
 
@@ -173,8 +160,6 @@ socket.on(CARD_DRAW_COMPLETED, async (data: { gameId: number; userId: number; us
 
 
 socket.on(SKIP, (data: { gameId: number; skippedPlayerId: number; skippedUsername: string }) => {
-    console.log("Turn skipped:", data);
-
     const currentPlayer = players.find(p => p.id === data.skippedPlayerId);
     const playerName = currentPlayer ? currentPlayer.username : data.skippedUsername;
 
@@ -192,7 +177,6 @@ socket.on(SKIP, (data: { gameId: number; skippedPlayerId: number; skippedUsernam
 });
 
 socket.on(REVERSE, (data: { gameId: number; newDirection: number;}) => {
-    console.log("Reverse:", data);
     isClockwise = data.newDirection === 1;
     updateDirectionSprite(isClockwise);
     showGameNotification("Game direction reversed!", 'info');
@@ -202,8 +186,6 @@ socket.on(REVERSE, (data: { gameId: number; newDirection: number;}) => {
 
 
 socket.on(COLOR_CHOSEN, (data: { gameId: number; userId: number; username: string; chosenColor: string} ) => {
-   console.log("Color chosen:", data);
-   console.log(`${data.username} chose ${data.chosenColor}`, 'info');
    if(topDiscardCard) {
          topDiscardCard.color = data.chosenColor;
          renderDiscardPile([topDiscardCard]);
@@ -211,8 +193,6 @@ socket.on(COLOR_CHOSEN, (data: { gameId: number; userId: number; username: strin
 });
 
 socket.on(GAME_END, (data: { gameId: number; winnerId: number; winnerUsername: string }) => {
-    console.log("Game ended:", data);
-
     showWinnerScreen(data.winnerUsername, data.winnerId);
 
 });
@@ -228,8 +208,6 @@ socket.on(ERROR, (data: { gameId: number; error: string; userId?: number }) => {
 // Game action functions
 
 const initGame = async () => {
-    console.log("Initializing game...", { gameId, currentUserId });
-
     const turnResponse = await fetch(`/games/${gameId}/turn`, {
         method: "GET",
         headers: {
@@ -341,22 +319,17 @@ const cardIsPlayable = (card: DisplayGameCard, topCard: DisplayGameCard): boolea
 
 
 const playSelectedCard = async (selectedCardId: number) => {
-    
-    
     if (!myTurn) {
-        console.log(" not your turn!");
         showGameNotification("It's not your turn!", 'warning');
         return;
     }
 
     const selectedCard = myhand.find(c => c.id === selectedCardId);
     if (!selectedCard) {
-        console.log("Card is not in your hand.");
         return;
     }
 
     if(!topDiscardCard || !cardIsPlayable(selectedCard, topDiscardCard)){
-        console.log("Card is not playable.");
         showGameNotification("Selected card is not playable.", 'warning');
         return;
     }
@@ -498,13 +471,10 @@ const getCurrentTurn = async () => {
         });
 
         if (!response.ok) {
-            console.error("failed to fetch turn");
             return null;
         }
 
         const turnData = await response.json();
-        console.log("Current turn:", turnData);
-
         return turnData;
     } catch (error) {
         console.error("Error getting turnnfo i:", error);
@@ -555,12 +525,10 @@ const eventListeners = () => {
             event.stopPropagation();
 
             if (selectedCardId === null) {
-                console.log("No card selected to play.");
                 return;
             }
 
             if (!selectedCardId){
-                console.log("Invalid card selected.");
                 showGameNotification('Please select a valid card','warning');
                 return;
             }
