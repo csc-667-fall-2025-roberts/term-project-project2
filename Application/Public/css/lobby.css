@@ -307,3 +307,101 @@
       flex-direction: column;
     }
   }
+
+  /* ---- Rejoin game card (above lobby chat) ---- */
+
+.rejoin-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rejoin-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rejoin-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #374151;
+}
+
+.rejoin-card-tag {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.rejoin-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.rejoin-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rejoin-game-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #111827;
+}
+
+.rejoin-game-meta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.rejoin-btn {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #7ae94b 0%, #2cb208 100%);
+  color: white;
+  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rejoin-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.45);
+}
+
+.rejoin-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
+}
+
+/* Mobile-friendly */
+@media (max-width: 600px) {
+  .rejoin-card-body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rejoin-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
