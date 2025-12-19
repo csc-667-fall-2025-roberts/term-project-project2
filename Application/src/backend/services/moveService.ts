@@ -231,11 +231,8 @@ export async function endTurn(
     throw new Error("It is Not your turn");
   }
 
-  console.log(`[endTurn] Player ${userId} drawing and passing turn`);
-  
-  // Player draws a card (this doesn't count as a move/turn)
-  await GameCards.drawCards(gameId, userId, 1);
-  
+  console.log(`[endTurn] Player ${userId} passing turn`);
+
   // Create skip move to advance to next player
   await Moves.createMove(gameId, userId, 'skip', undefined, undefined, undefined, false);
   console.log(`[endTurn] Turn advanced to next player`);
