@@ -578,7 +578,6 @@ const eventListeners = () => {
                 return;
             }
             await drawCard(1);
-            await endTurn();
         });
     }
 

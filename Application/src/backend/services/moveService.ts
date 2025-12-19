@@ -86,6 +86,9 @@ export async function playACard(
     return { success: false, message: "Failed to play card" };
   }
 
+  const players = await Games.getPlayers(gameId);
+  const playerCount = players.length;
+
   const isReverse = card.value === "reverse";
   const isSkip = card.value === "skip";
   const isDraw2 = card.value === "draw_two";
@@ -93,10 +96,11 @@ export async function playACard(
 
   logger.info(`[playACard] User ${userId} playing ${card.color} ${card.value} in game ${gameId}`);
   logger.info(`[playACard] Card effects - Reverse: ${isReverse}, Skip: ${isSkip}, Draw2: ${isDraw2}, WildDraw4: ${isWildDraw4}`);
+  const treatReverseAsSkip = isReverse && playerCount === 2;
 
   let playType: 'play' | 'draw' | 'skip' | 'reverse' = 'play';
-  if(isReverse) playType = 'reverse';
-  if(isSkip) playType = 'skip';
+  if(isReverse && !treatReverseAsSkip) playType = 'reverse';
+  if(isSkip || treatReverseAsSkip) playType = 'skip';
 
   logger.info(`[playACard] Creating move with playType: ${playType}, reverse flag: ${isReverse}`);
   console.log(`[playACard] Creating primary move: type=${playType}, cardId=${cardId}, reverse=${isReverse}`);
@@ -108,10 +112,10 @@ export async function playACard(
     cardId,
     isDraw2 ? 2 : isWildDraw4 ? 4 : undefined,
     chosenColor,
-    isReverse
+    isReverse && !treatReverseAsSkip
   );
-
-  if(isSkip){
+    
+  if(isSkip || treatReverseAsSkip){
     console.log(`[playACard] Skip card detected - creating extra skip move to advance turn by 2`);
     await Moves.createMove(gameId, userId, 'skip', undefined, undefined, undefined, false);
   }
