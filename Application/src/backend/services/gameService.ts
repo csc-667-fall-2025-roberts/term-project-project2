@@ -108,16 +108,16 @@ const playerCount = sortedPlayers.length;
 let currentTurn: number;
 
 if (playerCount === 2) {
-  
+  // 2 players: just alternate (direction doesn't matter visually)
   currentTurn = moveCount % playerCount;
 } else {
-  
+  // 3+ players: respect direction
   if (direction === 1) {
- 
+    // Clockwise: 0 -> 1 -> 2 -> 3 -> 0...
     currentTurn = moveCount % playerCount;
   } else {
-   
-    currentTurn = (playerCount - (moveCount % playerCount)) % playerCount;
+    // Counter-clockwise: 0 -> 3 -> 2 -> 1 -> 0...
+    currentTurn = (-moveCount % playerCount + playerCount) % playerCount;
   }
 }
 
