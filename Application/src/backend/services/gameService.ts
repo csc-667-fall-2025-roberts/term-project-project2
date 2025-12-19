@@ -92,41 +92,66 @@ direction: number;
 }>
 {
 const players = await Games.getPlayers(gameId);
-const moveCount = await Moves.getMoveCount(gameId);
-const direction = await Moves.getTurnDirection(gameId);
-const lastMove = await Moves.getLastMove(gameId);
+const allMoves = await Moves.getGameMoves(gameId);
 
+console.log(`[getCurrentTurn] Game ${gameId}:`);
 
 if (players.length === 0) {
   throw new Error("No players in the game");
-
 }
 
 const sortedPlayers = players.sort((a, b) => a.position - b.position);
 const playerCount = sortedPlayers.length;
 
-let currentTurn: number;
+console.log(`  - Players (${playerCount}): ${sortedPlayers.map(p => `${p.username}(pos:${p.position})`).join(', ')}`);
 
-if (playerCount === 2) {
-  // 2 players: just alternate (direction doesn't matter visually)
-  currentTurn = moveCount % playerCount;
-} else {
-  // 3+ players: respect direction
-  if (direction === 1) {
-    // Clockwise: 0 -> 1 -> 2 -> 3 -> 0...
-    currentTurn = moveCount % playerCount;
+// Simulate turn progression by walking through all moves
+let currentPosition = 0;
+let currentDirection = 1; // Start clockwise
+
+for (const move of allMoves) {
+  // Check if this move counts towards turn progression
+  const countsAsMove = move.card_id !== null || move.play_type === 'skip' || (move.play_type === 'draw' && move.draw_amount === null);
+
+  if (!countsAsMove) {
+    continue;
+  }
+
+
+  if (move.play_type === 'reverse') {
+    currentDirection *= -1; // Flip direction
+  
+
+    if (currentDirection === 1) {
+      currentPosition = (currentPosition + 1) % playerCount;
+    } else {
+      currentPosition = (currentPosition - 1 + playerCount) % playerCount;
+    }
   } else {
-    // Counter-clockwise: 0 -> 3 -> 2 -> 1 -> 0...
-    currentTurn = (-moveCount % playerCount + playerCount) % playerCount;
+    // Regular move: advance to next player based on current direction
+    if (playerCount === 2) {
+      // 2 players: always alternate
+      currentPosition = (currentPosition + 1) % playerCount;
+    } else {
+      // 3+ players: respect direction
+      if (currentDirection === 1) {
+        // Clockwise
+        currentPosition = (currentPosition + 1) % playerCount;
+      } else {
+        // Counter-clockwise
+        currentPosition = (currentPosition - 1 + playerCount) % playerCount;
+      }
+    }
   }
 }
 
-const currentId = sortedPlayers[currentTurn];
+const currentId = sortedPlayers[currentPosition];
+
 
 return {
-  currentPlayerId: currentId.user_id, playerOrder: currentId.position || 1, direction
+  currentPlayerId: currentId.user_id, playerOrder: currentId.position || 1, direction: currentDirection
 }
-  
+
 }
 
 
