@@ -3,6 +3,7 @@ import * as Games from "../db/games";
 import * as Moves from "../db/moves";
 import { GameState } from "../../types/types";
 import { getCurrentTurn } from "./gameService";
+import logger from "../lib/logger";
 
 
 
@@ -93,11 +94,16 @@ export async function playACard(
   const isDraw2 = card.value === "draw_two";
   const isWildDraw4 = card.value === "wild_draw_four";
 
+  logger.info(`[playACard] User ${userId} playing ${card.color} ${card.value} in game ${gameId}`);
+  logger.info(`[playACard] Card effects - Reverse: ${isReverse}, Skip: ${isSkip}, Draw2: ${isDraw2}, WildDraw4: ${isWildDraw4}`);
   const treatReverseAsSkip = isReverse && playerCount === 2;
 
   let playType: 'play' | 'draw' | 'skip' | 'reverse' = 'play';
   if(isReverse && !treatReverseAsSkip) playType = 'reverse';
   if(isSkip || treatReverseAsSkip) playType = 'skip';
+
+  logger.info(`[playACard] Creating move with playType: ${playType}, reverse flag: ${isReverse}`);
+  console.log(`[playACard] Creating primary move: type=${playType}, cardId=${cardId}, reverse=${isReverse}`);
 
   await Moves.createMove(
     gameId,
@@ -108,20 +114,30 @@ export async function playACard(
     chosenColor,
     isReverse && !treatReverseAsSkip
   );
-
+    
   if(isSkip || treatReverseAsSkip){
+    console.log(`[playACard] Skip card detected - creating extra skip move to advance turn by 2`);
     await Moves.createMove(gameId, userId, 'skip', undefined, undefined, undefined, false);
+  }
+
+  if(isReverse){
+    console.log(`[playACard] Reverse card played - direction will flip`);
+
   }
 
   if(isDraw2 || isWildDraw4){
     const drawCount = isDraw2 ? 2 : 4;
+    console.log(`[playACard] Draw card played (${isDraw2 ? 'Draw 2' : 'Wild Draw 4'}) - next player draws ${drawCount}`);
 
+    // Get next player AFTER the draw card move has been recorded
     const turnInfo = await getCurrentTurn(gameId);
     const nextPlayerId = turnInfo.currentPlayerId;
+    console.log(`[playACard] Next player to draw: userId=${nextPlayerId}`);
 
     // Check if we need to recycle the discard pile before drawing
     let deckCount = await GameCards.getDeckCount(gameId);
     if(deckCount < drawCount){
+      console.log(`[playACard] Not enough cards in deck (${deckCount}), recycling discard pile`);
       await GameCards.recycleDiscardPile(gameId);
       deckCount = await GameCards.getDeckCount(gameId);
 
@@ -131,16 +147,11 @@ export async function playACard(
     }
 
     await GameCards.drawCards(gameId, nextPlayerId, drawCount);
+    console.log(`[playACard] Player ${nextPlayerId} drew ${drawCount} cards`);
 
-    await Moves.createMove(
-      gameId,
-      nextPlayerId,
-      'draw',
-      undefined,
-      undefined,
-      undefined,
-      false
-    );
+   
+    console.log(`[playACard] Creating skip move - player ${nextPlayerId} loses their turn`);
+    await Moves.createMove(gameId, userId, 'skip', undefined, undefined, undefined, false);
   }
 
       
@@ -220,7 +231,14 @@ export async function endTurn(
     throw new Error("It is Not your turn");
   }
 
-  await Moves.createMove(gameId, userId, 'draw', undefined, undefined, undefined, false);
+  console.log(`[endTurn] Player ${userId} drawing and passing turn`);
+  
+  // Player draws a card (this doesn't count as a move/turn)
+  await GameCards.drawCards(gameId, userId, 1);
+  
+  // Create skip move to advance to next player
+  await Moves.createMove(gameId, userId, 'skip', undefined, undefined, undefined, false);
+  console.log(`[endTurn] Turn advanced to next player`);
 
   return { success: true };
 }
